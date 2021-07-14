@@ -1,0 +1,34 @@
+server.port: 9999
+spring:
+  profiles.active: native
+  cloud.config.server:
+    #ark_extension_path env variable consists of nfs location/path on the POD 
+    native.searchLocations: file://${ark_extension_path}/acm/acm-config-server-repo, file://${ark_extension_path}/acm/acm-config-server-repo/rules, file://${ark_extension_path}/acm/acm-config-server-repo/lookups, file://${ark_extension_path}/acm/acm-config-server-repo/ldap, file://${ark_extension_path}/acm/acm-config-server-repo/labels
+  jms:
+    pub-sub-domain: true
+properties.folder.path: /app
+branding.files.folder.path: /app
+logging:
+  file: /dev/stdout
+  level:
+    com.armedia.acm.configserver: debug
+    org.springframework.cloud.config: debug
+  # pattern:
+  #   file: "%d{yyyy-MM-dd HH:mm:ss,SSS} [%thread] %-5level %logger.%M - %msg%n"
+  jms.message.buffer.window: 1
+  #activemq url and secrets will be templatized with helm 
+  acm.activemq:
+    broker-url: ssl://52.66.18.216:61616
+    keystore: /app/conf/arkcase.ks
+    keystore-password: AcMd3v$
+    truststore: /app/conf/arkcase.ts
+    truststore-password: password
+    user: "guest"
+    password: "guest"
+    default-destination: configuration.changed
+    labels-destination: labels.changed
+    ldap-destination: ldap.changed
+    lookups-destination: lookups.changed
+    rules-destination: rules.changed
+    timeout: 10 #seconds
+  arkcase.languages: "-de,-en,-en-in,-es,-fr,-hi,-ja,-pt,-ru,-zh-cn,-zh-tw"
