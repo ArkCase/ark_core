@@ -18,13 +18,13 @@ logging:
   jms.message.buffer.window: 1
   #activemq url and secrets will be templatized with helm 
   acm.activemq:
-    broker-url: ssl://52.66.18.216:61616
+    broker-url: ssl://${activemq-url}:61616
     keystore: /app/conf/arkcase.ks
-    keystore-password: AcMd3v$
+    keystore-password: ${activemq-password}
     truststore: /app/conf/arkcase.ts
     truststore-password: password
-    user: "guest"
-    password: "guest"
+    user: "${activemq-user}"
+    password: "${activemq-password}"
     default-destination: configuration.changed
     labels-destination: labels.changed
     ldap-destination: ldap.changed
