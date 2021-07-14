@@ -4,6 +4,7 @@ LABEL ORG="Armedia LLC" \
       IMAGE_SOURCE=https://github.com/ArkCase/ark_cloudconfig \
       MAINTAINER="Armedia LLC"
 ARG RESOURCE_PATH="target"
+ARG CLOUD_CONFIG_VERSION=2021.03
 WORKDIR /app
 RUN useradd --create-home --user-group arkcase \
         && mkdir /app/tmp \
@@ -11,7 +12,7 @@ RUN useradd --create-home --user-group arkcase \
 
 USER arkcase
 #COPY the application war files
-COPY --chown=arkcase ${RESOURCE_PATH}/config-server-2021.03-SNAPSHOT.jar /app/config-server.jar 
+COPY --chown=arkcase ${RESOURCE_PATH}/config-server-${CLOUD_CONFIG_VERSION}-SNAPSHOT.jar /app/config-server.jar 
 COPY --chown=arkcase ${RESOURCE_PATH}/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh
