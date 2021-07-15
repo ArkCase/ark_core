@@ -19,10 +19,6 @@ logging:
   #activemq url and secrets will be templatized with helm 
   acm.activemq:
     broker-url: ssl://${activemq-url}:61616
-    keystore: /app/conf/arkcase.ks
-    keystore-password: ${activemq-password}
-    truststore: /app/conf/arkcase.ts
-    truststore-password: password
     user: "${activemq-user}"
     password: "${activemq-password}"
     default-destination: configuration.changed
