@@ -3,7 +3,7 @@ LABEL ORG="Armedia LLC" \
       VERSION="1.0" \
       IMAGE_SOURCE=https://github.com/ArkCase/ark_cloudconfig \
       MAINTAINER="Armedia LLC"
-ARG RESOURCE_PATH="target" 
+ARG RESOURCE_PATH="artifacts" 
 ENV CLOUD_CONFIG_VERSION="2021.03"
 WORKDIR /app
 RUN useradd --create-home --user-group arkcase \
@@ -13,7 +13,7 @@ RUN useradd --create-home --user-group arkcase \
 USER arkcase
 #COPY the application war files
 COPY --chown=arkcase ${RESOURCE_PATH}/config-server-${CLOUD_CONFIG_VERSION}-SNAPSHOT.jar /app/config-server.jar 
-COPY --chown=arkcase ./conf/start.sh /app/start.sh
+COPY --chown=arkcase ${RESOURCE_PATH}/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh
 EXPOSE 9999
