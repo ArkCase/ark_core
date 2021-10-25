@@ -12,7 +12,7 @@ RUN useradd --create-home --user-group arkcase \
 
 USER arkcase
 #COPY the application war files
-COPY --chown=arkcase ${RESOURCE_PATH}/config-server-${CLOUD_CONFIG_VERSION}-SNAPSHOT.jar /app/config-server.jar 
+COPY --chown=arkcase ${RESOURCE_PATH}/config-server.jar /app/config-server.jar 
 COPY --chown=arkcase ${RESOURCE_PATH}/start.sh /app/start.sh
 
 RUN chmod +x /app/start.sh
