@@ -3,7 +3,7 @@ FROM 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_base:latest
 LABEL ORG="Arkcase LLC" \
       VERSION="1.0" \
       IMAGE_SOURCE=https://github.com/ArkCase/ark_cloudconfig \
-      MAINTAINER="Armedia LLC"
+      MAINTAINER="Arkcase LLC"
 #################
 # Build JDK
 #################
