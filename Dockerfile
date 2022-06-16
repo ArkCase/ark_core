@@ -17,7 +17,7 @@ ARG TEMP_DIR="${BASE_DIR}/tmp"
 ARG HOME_DIR="${BASE_DIR}/home"
 ARG RESOURCE_PATH="artifacts" 
 ARG JAR_SRC="https://github.com/ArkCase/acm-config-server/releases/download/${VER}/config-server-${VER}.jar"
-ARG MAIN_CONFIG="application.yml"
+ARG MAIN_CONF="application.yml"
 
 LABEL ORG="ArkCase LLC"
 LABEL MAINTAINER="Armedia Devops Team <devops@armedia.com>"
@@ -38,7 +38,7 @@ ENV DATA_DIR="${DATA_DIR}"
 ENV TEMP_DIR="${TEMP_DIR}"
 ENV HOME_DIR="${HOME_DIR}"
 ENV EXE_JAR="${BASE_DIR}/config-server-${VER}.jar"
-ENV MAIN_CONFIG="${MAIN_CONFIG}"
+ENV MAIN_CONF="${MAIN_CONF}"
 
 WORKDIR "${BASE_DIR}"
 
@@ -62,6 +62,7 @@ RUN useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --create-home --ho
 # COPY the application war files
 #
 ADD "${JAR_SRC}" "${EXE_JAR}"
+ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 
 RUN rm -rf /tmp/*
 RUN mkdir -p "${TEMP_DIR}" "${DATA_DIR}"
@@ -71,4 +72,4 @@ RUN chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}"
 USER "${APP_USER}"
 EXPOSE 9999
 VOLUME [ "${DATA_DIR}" ]
-ENTRYPOINT [ "/usr/bin/java", "-jar", "${EXE_JAR}", "--spring.config.location=file://${DATA_DIR}/${MAIN_CONFIG}" ]
+ENTRYPOINT [ "/entrypoint" ]
