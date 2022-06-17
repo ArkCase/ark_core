@@ -3,7 +3,7 @@
 #
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="2021.03.07"
+ARG VER="2021.03.11"
 ARG PKG="cloudconfig"
 ARG SRC="https://github.com/ArkCase/acm-config-server.git"
 
