@@ -40,7 +40,7 @@ JAVA="/usr/bin/java"
 [ -x "${DATA_DIR}" ] || fail "The data directory at [${DATA_DIR}] is not executable"
 DATA_DIR="$(readlink -f "${DATA_DIR}")"
 
-CONF="${DATA_DIR}/${MAIN_CONFIG:-application.yml}"
+CONF="${DATA_DIR}/${MAIN_CONF:-application.yml}"
 
 #
 # If our configuration is missing or empty, we render a new one
@@ -94,4 +94,5 @@ CONF="$(urlencode "${CONF}")"
 #
 # Execute it!
 #
-exec "${JAVA}" -jar "${EXE_JAR}" --spring.config.location="file://${CONF}"
+[ ${#} -lt 1 ] && set -- --spring.config.location="file://${CONF}"
+exec "${JAVA}" -jar "${EXE_JAR}" "${@}"
