@@ -17,8 +17,8 @@ ARG OS
 ARG VER
 ARG PKG
 ARG SRC
-ARG MAVEN_VER="3.8.6"
-ARG MAVEN_SRC="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VER}/binaries/apache-maven-${MAVEN_VER}-bin.tar.gz"
+ARG MVN_VER="3.8.6"
+ARG MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
 
 LABEL ORG="ArkCase LLC"
 LABEL MAINTAINER="Armedia Devops Team <devops@armedia.com>"
@@ -32,8 +32,8 @@ ENV JAVA_HOME="/usr/lib/jvm/java"
 ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
-ENV MAVEN_VER="3.8.6"
-ENV MAVEN_SRC="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VER}/binaries/apache-maven-${MAVEN_VER}-bin.tar.gz"
+ENV MVN_VER="3.8.6"
+ENV MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
 
 WORKDIR "/src"
 
@@ -42,9 +42,9 @@ RUN yum update -y && yum -y install java-1.8.0-openjdk-devel git && yum clean al
 
 # Next, the stuff that will be needed for the build
 COPY "mvn" "/usr/bin"
-ADD "${MAVEN_SRC}" "/"
-RUN tar -C / -xzf "/apache-maven-${MAVEN_VER}-bin.tar.gz" && mv -vf "/apache-maven-${MAVEN_VER}" "/mvn"
-RUN git clone -b "${VER}" "${SRC}" . && ls -l && mvn clean verify
+ADD "${MVN_SRC}" "/"
+RUN echo "Installing Maven ${MVN_VER}..." && tar -C / -xzf "/apache-maven-${MVN_VER}-bin.tar.gz" && mv -vf "/apache-maven-${MVN_VER}" "/mvn"
+RUN echo "Cloning version [${VER}] from [${SRC}]..." && git clone -b "${VER}" "${SRC}" . && ls -l && mvn clean verify
 
 ########################################
 # Build ConfigServer                   #
