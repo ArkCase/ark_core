@@ -1,0 +1,98 @@
+#!/bin/bash
+set -eu -o pipefail
+
+say() {
+	echo -e "${@}"
+}
+
+fail() {
+	say "${@}" 1>&2
+	exit ${EXIT_CODE:-1}
+}
+
+urlencode() {
+	local STR="${1}"
+	local LEN=${#STR}
+	local RESULT=""
+	local POS C O
+
+	for (( POS=0 ; POS < LEN ; POS++ )); do
+		C=${STR:$POS:1}
+		case "${C}" in
+			[-_.~a-zA-Z0-9/] )	O="${C}" ;;
+			* )					printf -v O '%%%02x' "'${C}"
+		esac
+		RESULT+="${O}"
+	done
+	echo "${RESULT}"    # You can either set a return variable (FASTER) 
+}
+
+#
+# TODO: Do we actually want to verify this?
+#
+JAVA="/usr/bin/java"
+
+[ -n "${DATA_DIR}" ] || fail "The DATA_DIR environment variable may not be empty"
+[ -e "${DATA_DIR}" ] || fail "The data directory at [${DATA_DIR}] does not exist"
+[ -d "${DATA_DIR}" ] || fail "The data directory path [${DATA_DIR}] is not a directory"
+[ -r "${DATA_DIR}" ] || fail "The data directory at [${DATA_DIR}] is not readable"
+[ -w "${DATA_DIR}" ] || fail "The data directory at [${DATA_DIR}] is not writable"
+[ -x "${DATA_DIR}" ] || fail "The data directory at [${DATA_DIR}] is not executable"
+DATA_DIR="$(readlink -f "${DATA_DIR}")"
+
+CONF="${DATA_DIR}/${MAIN_CONF:-application.yml}"
+
+#
+# If our configuration is missing or empty, we render a new one
+#
+if [ ! -s "${CONF}" ] ; then
+	#
+	# TODO: Do we want to find all subdirectories within and index those here?
+	#
+	# We add the empty string to indicate the directory itself
+	LOCATIONS=("" "labels" "ldap" "lookups" "rules")
+	SEARCH_LOCATIONS=""
+	for L in "${LOCATIONS[@]}" ; do
+		# If we need a leading comma, add it
+		[ -n "${SEARCH_LOCATIONS}" ] && SEARCH_LOCATIONS+=","
+		LOCATION="${DATA_DIR}"
+		[ -n "${L}" ] && LOCATION="${DATA_DIR}/${L}"
+		LOCATION="$(urlencode "${LOCATION}")"
+		SEARCH_LOCATIONS="${SEARCH_LOCATIONS}file://${LOCATION}"
+	done
+	cat > "${CONF}" <<- EOF
+	server.port: "9999"
+	spring.profiles.active: native
+	spring.cloud.config.server.native.searchLocations: "${SEARCH_LOCATIONS}"
+	spring.jms.pub-sub-domain: "true"
+	properties.folder.path: "${DATA_DIR}"
+	branding.files.folder.path: "${DATA_DIR}/branding"
+	logging.file: /dev/stdout
+	logging.level.com.armedia.acm.configserver: debug
+	logging.level.org.springframework.cloud.config: debug
+	jms.message.buffer.window: "1"
+	spring.activemq.broker-url: "${ACTIVEMQ_URL}"
+	acm.activemq.broker-url: "${ACTIVEMQ_URL}"
+	acm.activemq.default-destination: configuration.changed
+	acm.activemq.labels-destination: labels.changed
+	acm.activemq.ldap-destination: ldap.changed
+	acm.activemq.lookups-destination: lookups.changed
+	acm.activemq.rules-destination: rules.changed
+	acm.activemq.timeout: "10"
+	arkcase.languages: "-de,-en,-en-in,-es,-fr,-hi,-ja,-pt,-ru,-zh-cn,-zh-tw"
+	logging.pattern.file: "%d{yyyy-MM-dd HH:mm:ss,SSS} [%thread] %-5level %logger.%M - %msg%n"
+	java.io.tmpdir: "${TEMP_DIR}"
+	EOF
+fi
+CONF="$(readlink -f "${CONF}")"
+
+#
+# Make sure the configuration file gets URL-encoded
+#
+CONF="$(urlencode "${CONF}")"
+
+#
+# Execute it!
+#
+[ ${#} -lt 1 ] && set -- --spring.config.location="file://${CONF}"
+exec "${JAVA}" -jar "${EXE_JAR}" "${@}"

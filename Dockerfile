@@ -1,44 +1,127 @@
+#
+# Basic Parameters
+#
+ARG ARCH="amd64"
+ARG OS="linux"
+ARG VER="2021.03.11"
+ARG PKG="cloudconfig"
+ARG SRC="https://github.com/ArkCase/acm-config-server.git"
+
+FROM 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_base:latest as src
+
+#
+# Basic Parameters
+#
+ARG ARCH
+ARG OS
+ARG VER
+ARG PKG
+ARG SRC
+ARG MVN_VER="3.8.6"
+ARG MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
+
+LABEL ORG="ArkCase LLC"
+LABEL MAINTAINER="Armedia Devops Team <devops@armedia.com>"
+LABEL APP="Cloudconfig"
+LABEL VERSION="${VER}"
+
+# Environment variables
+ENV VER="${VER}"
+ENV SRC="${SRC}"
+ENV JAVA_HOME="/usr/lib/jvm/java"
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8"
+ENV MVN_VER="3.8.6"
+ENV MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
+
+WORKDIR "/src"
+
+# First, install the JDK
+RUN yum update -y && yum -y install java-1.8.0-openjdk-devel git && yum clean all
+
+# Next, the stuff that will be needed for the build
+COPY "mvn" "/usr/bin"
+ADD "${MVN_SRC}" "/"
+RUN echo "Installing Maven ${MVN_VER}..." && tar -C / -xzf "/apache-maven-${MVN_VER}-bin.tar.gz" && mv -vf "/apache-maven-${MVN_VER}" "/mvn"
+RUN echo "Cloning version [${VER}] from [${SRC}]..." && git clone -b "${VER}" "${SRC}" . && ls -l && mvn clean verify
+
+########################################
+# Build ConfigServer                   #
+########################################
+
 FROM 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_base:latest
 
-LABEL ORG="ArkCase LLC" \
-      VERSION="1.0" \
-      IMAGE_SOURCE=https://github.com/ArkCase/ark_cloudconfig \
-      MAINTAINER="ArkCase LLC"
+#
+# Basic Parameters
+#
+ARG ARCH
+ARG OS
+ARG VER
+ARG PKG
+ARG APP_UID="997"
+ARG APP_GID="${APP_UID}"
+ARG APP_USER="${PKG}"
+ARG APP_GROUP="${APP_USER}"
+ARG BASE_DIR="/app"
+ARG DATA_DIR="${BASE_DIR}/data"
+ARG TEMP_DIR="${BASE_DIR}/tmp"
+ARG HOME_DIR="${BASE_DIR}/home"
+ARG RESOURCE_PATH="artifacts" 
+ARG SRC
+ARG MAIN_CONF="application.yml"
+
+LABEL ORG="ArkCase LLC"
+LABEL MAINTAINER="Armedia Devops Team <devops@armedia.com>"
+LABEL APP="Cloudconfig"
+LABEL VERSION="${VER}"
+
+# Environment variables
+ENV APP_UID="${APP_UID}"
+ENV APP_GID="${APP_GID}"
+ENV APP_USER="${APP_USER}"
+ENV APP_GROUP="${APP_GROUP}"
+ENV JAVA_HOME="/usr/lib/jvm/java"
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8"
+ENV BASE_DIR="${BASE_DIR}"
+ENV DATA_DIR="${DATA_DIR}"
+ENV TEMP_DIR="${TEMP_DIR}"
+ENV HOME_DIR="${HOME_DIR}"
+ENV EXE_JAR="config-server-${VER}.jar"
+ENV MAIN_CONF="${MAIN_CONF}"
+
+WORKDIR "${BASE_DIR}"
+
 #################
-# Build JDK
+# First, install the JDK
 #################
 
-ARG JAVA_VERSION="1.8.0.322.b06-1.el7_9"
+RUN yum update -y && yum -y install java-1.8.0-openjdk-devel git && yum clean all
 
-ENV JAVA_HOME=/usr/lib/jvm/java \
-    LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
-
-RUN yum update -y && \
-    yum -y install java-1.8.0-openjdk-devel-${JAVA_VERSION} unzip && \
-    $JAVA_HOME/bin/javac -version
 #################
 # Build ConfigServer
 #################
 
-ARG RESOURCE_PATH="artifacts" 
-ARG IMAGEUSERNAME=arkcase
-ENV CLOUD_CONFIG_VERSION="2021.03"
-WORKDIR /app
-RUN    yum update -y  && useradd --create-home --user-group arkcase \
-        && mkdir /app/tmp \
-        && chown -R ${IMAGEUSERNAME}:${IMAGEUSERNAME} /app \
-        && yum -y erase unzip \
-        && yum clean all \
-        && rm -rf /tmp/*
+#
+# Create the requisite user and group
+#
+RUN groupadd --system --gid "${APP_GID}" "${APP_GROUP}"
+RUN useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
-USER ${IMAGEUSERNAME}
-#COPY the application war files
-COPY --chown=${IMAGEUSERNAME} ${RESOURCE_PATH}/config-server.jar /app/config-server.jar 
-COPY --chown=${IMAGEUSERNAME} ${RESOURCE_PATH}/start.sh /app/start.sh
+#
+# COPY the application war files
+#
+COPY --from=src "/src/target/${EXE_JAR}" "${BASE_DIR}/${EXE_JAR}"
+ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 
-RUN chmod +x /app/start.sh
+RUN rm -rf /tmp/*
+RUN mkdir -p "${TEMP_DIR}" "${DATA_DIR}"
+RUN chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}"
+RUN chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}"
+
+USER "${APP_USER}"
 EXPOSE 9999
-
-CMD [ "/app/start.sh" ]
+VOLUME [ "${DATA_DIR}" ]
+ENTRYPOINT [ "/entrypoint" ]
