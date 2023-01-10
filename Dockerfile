@@ -1,3 +1,18 @@
+###########################################################################################################
+#
+# How to build:
+#
+# docker build -t 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_cloudconfig:latest .
+# docker push 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_cloudconfig:latest
+#
+# How to run: (Helm)
+#
+# helm repo add arkcase https://arkcase.github.io/ark_helm_charts/
+# helm install ark_cloudconfig arkcase/ark_cloudconfig
+# helm uninstall ark_cloudconfig
+#
+###########################################################################################################
+
 #
 # Basic Parameters
 #
@@ -17,7 +32,7 @@ ARG OS
 ARG VER
 ARG PKG
 ARG SRC
-ARG MVN_VER="3.8.6"
+ARG MVN_VER="3.8.7"
 ARG MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
 
 LABEL ORG="ArkCase LLC"
@@ -32,7 +47,7 @@ ENV JAVA_HOME="/usr/lib/jvm/java"
 ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
-ENV MVN_VER="3.8.6"
+ENV MVN_VER="3.8.7"
 ENV MVN_SRC="https://dlcdn.apache.org/maven/maven-3/${MVN_VER}/binaries/apache-maven-${MVN_VER}-bin.tar.gz"
 
 WORKDIR "/src"
@@ -59,7 +74,7 @@ ARG ARCH
 ARG OS
 ARG VER
 ARG PKG
-ARG APP_UID="997"
+ARG APP_UID="1997"
 ARG APP_GID="${APP_UID}"
 ARG APP_USER="${PKG}"
 ARG APP_GROUP="${APP_USER}"
