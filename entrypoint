@@ -1,5 +1,7 @@
 #!/bin/bash
+/app/tomcat/bin/startup.sh &
 set -eu -o pipefail
+
 
 say() {
 	echo -e "${@}"
@@ -95,4 +97,4 @@ CONF="$(urlencode "${CONF}")"
 # Execute it!
 #
 [ ${#} -lt 1 ] && set -- --spring.config.location="file://${CONF}"
-exec "${JAVA}" -jar "${EXE_JAR}" "${@}"
+exec "${JAVA}" -jar "/app/${EXE_JAR}" "${@}"
