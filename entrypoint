@@ -1,5 +1,5 @@
 #!/bin/bash
-/app/tomcat/bin/startup.sh &
+/starttomcat &
 set -eu -o pipefail
 
 

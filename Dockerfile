@@ -130,6 +130,7 @@ RUN groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
 #
 COPY --from=src "/src/target/${EXE_JAR}" "${BASE_DIR}/${EXE_JAR}"
 ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
+ADD --chown="${APP_USER}:${APP_GROUP}" "starttomcat" "/starttomcat"
 
 RUN rm -rf /tmp/* && \
     mkdir -p "${TEMP_DIR}" "${DATA_DIR}" && \
@@ -223,16 +224,16 @@ RUN yum -y install epel-release
 RUN yum install -y tesseract tesseract-osd qpdf ImageMagick ImageMagick-devel && \
     ln -s /usr/bin/convert /usr/bin/magick &&\
     ln -s /usr/share/tesseract/tessdata/configs/pdf /usr/share/tesseract/tessdata/configs/PDF &&\
-    yum update -y && yum clean all && rm -rf /tmp/* &&\
-    mkdir -p /app/tomcat/bin/logs/ &&\
-    mkdir -p /app/logs
+    yum update -y && yum clean all && rm -rf /tmp/* 
 
 ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml"
 ##################################################### ARKCASE: ABOVE ###############################################################
 
 USER "${APP_USER}"
 
-RUN /usr/bin/ln -s /app/data /app/home/.arkcase
+RUN /usr/bin/ln -s /app/data /app/home/.arkcase &&\
+    mkdir -p /app/tomcat/bin/logs/ &&\
+    mkdir -p /app/logs
 
 EXPOSE 9999
 VOLUME [ "${DATA_DIR}" ]

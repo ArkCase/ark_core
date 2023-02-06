@@ -1,0 +1,3 @@
+#!/bin/bash
+sleep 10
+/app/tomcat/bin/startup.sh &
