@@ -2,8 +2,8 @@
 #
 # How to build:
 #
-# docker build -t 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_cloudconfig:latest .
-# docker push 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_cloudconfig:latest
+# docker build -t 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_core:latest .
+# docker push 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_core:latest
 #
 # How to run: (Helm)
 #
@@ -224,7 +224,9 @@ RUN yum -y install epel-release
 RUN yum install -y tesseract tesseract-osd qpdf ImageMagick ImageMagick-devel && \
     ln -s /usr/bin/convert /usr/bin/magick &&\
     ln -s /usr/share/tesseract/tessdata/configs/pdf /usr/share/tesseract/tessdata/configs/PDF &&\
-    yum update -y && yum clean all && rm -rf /tmp/* 
+    yum update -y && yum clean all && rm -rf /tmp/*  &&\
+    mkdir -p /arkcase/runtime/default/spring/ &&\
+    chown -R "${APP_USER}:${APP_GROUP}" /arkcase
 
 ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml"
 ##################################################### ARKCASE: ABOVE ###############################################################
