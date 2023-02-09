@@ -62,6 +62,7 @@ if [ ! -s "${CONF}" ] ; then
 		LOCATION="$(urlencode "${LOCATION}")"
 		SEARCH_LOCATIONS="${SEARCH_LOCATIONS}file://${LOCATION}"
 	done
+	[ -v ACTIVEMQ_URL ] || ACTIVEMQ_URL="tcp://messaging:61616"
 	cat > "${CONF}" <<- EOF
 	server.port: "9999"
 	spring.profiles.active: native

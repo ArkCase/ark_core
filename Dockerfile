@@ -191,6 +191,7 @@ RUN yum install --assumeyes nodejs
 RUN npm install -g yarn
 
 
+ADD --chown="${APP_USER}:${APP_GROUP}" "arkcase.war" "/app/arkcase.war"
     #unpack tomcat tar to tomcat directory
 RUN tar -xf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     mv apache-tomcat-${TOMCAT_VERSION} tomcat && \
@@ -199,14 +200,16 @@ RUN tar -xf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     rm -rf tomcat/webapps/* tomcat/temp/* tomcat/bin/*.bat && \
     mv server.xml logging.properties tomcat/conf/ && \
     mkdir -p /tomcat/logs &&\
-    curl https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/acm-standard-applications/arkcase/${ARKCASE_VERSION}/arkcase-${ARKCASE_VERSION}.war -o /app/tomcat/webapps/arkcase.war && \
-    # mv arkcase-${ARKCASE_VERSION}.war  ./tomcat/webapps/arkcase.war && \
-    #mkdir -p /app/tmp/.arkcase && \
-    # unzip /tmp/arkcase-config-core-2021.03.19.zip -d /app/tmp/.arkcase  &&\
-    ####
+    mv /app/arkcase.war /app/tomcat/arkcase.war && \
+#    curl https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/acm-standard-applications/arkcase/${ARKCASE_VERSION}/arkcase-${ARKCASE_VERSION}.war -o /app/tomcat/arkcase.war && \
+    mkdir -p /app/tomcat/webapps/arkcase && \
+    cd /app/tomcat/webapps/arkcase && \
+    jar xvf /app/tomcat/arkcase.war && \
+    rm /app/tomcat/arkcase.war && \
+    rm /app/tomcat/webapps/arkcase/WEB-INF/lib/postgresql-9.3-1100-jdbc41.jar && \ 
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     #### chown -R tomcat:tomcat /app && \
-    chmod u+x tomcat/bin/*.sh &&\
+    chmod u+x /app/tomcat/bin/*.sh &&\
     # Add default SSL Keys
     mv /app/arkcase-server.crt  /etc/tls/crt/arkcase-server.crt &&\
     mv /app/arkcase-server.pem /etc/tls/private/arkcase-server.pem &&\
@@ -224,18 +227,23 @@ RUN yum -y install epel-release
 RUN yum install -y tesseract tesseract-osd qpdf ImageMagick ImageMagick-devel && \
     ln -s /usr/bin/convert /usr/bin/magick &&\
     ln -s /usr/share/tesseract/tessdata/configs/pdf /usr/share/tesseract/tessdata/configs/PDF &&\
-    yum update -y && yum clean all && rm -rf /tmp/*  &&\
-    mkdir -p /arkcase/runtime/default/spring/ &&\
-    chown -R "${APP_USER}:${APP_GROUP}" /arkcase
+    yum update -y && yum clean all && rm -rf /tmp/*  
+    #mkdir -p /arkcase/runtime/default/spring/ &&\
+    #chown -R "${APP_USER}:${APP_GROUP}" /arkcase
 
-ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml"
+RUN yum -y install openldap-clients
+ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml -Dspring.profiles.active=ldap"
+ENV LD_LIBRARY_PATH="/app/home/.arkcase/libraries"
 ##################################################### ARKCASE: ABOVE ###############################################################
 
+ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "/app/tomcat/lib/postgresql-42.5.2.jar"
+ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
 USER "${APP_USER}"
 
 RUN /usr/bin/ln -s /app/data /app/home/.arkcase &&\
     mkdir -p /app/tomcat/bin/logs/ &&\
-    mkdir -p /app/logs
+    mkdir -p /app/logs &&\
+    keytool -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -importcert -trustcacerts -file /app/samba.crt -alias samba -noprompt
 
 EXPOSE 9999
 VOLUME [ "${DATA_DIR}" ]
