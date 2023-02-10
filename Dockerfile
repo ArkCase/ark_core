@@ -129,8 +129,9 @@ RUN groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
 # COPY the application war files
 #
 COPY --from=src "/src/target/${EXE_JAR}" "${BASE_DIR}/${EXE_JAR}"
-ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
-ADD --chown="${APP_USER}:${APP_GROUP}" "starttomcat" "/starttomcat"
+ADD --chown="${APP_USER}:${APP_GROUP}" "cloudconfig" "/cloudconfig"
+ADD --chown="${APP_USER}:${APP_GROUP}" "arkcase" "/arkcase"
+ADD "cloudconfig.ini" "arkcase.ini" "/etc/supervisord.d/"
 
 RUN rm -rf /tmp/* && \
     mkdir -p "${TEMP_DIR}" "${DATA_DIR}" && \
@@ -179,17 +180,14 @@ ADD https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VERSION}/v${TOM
 
 #  \
 RUN yum -y update && \
-    useradd  tomcat --system --user-group -d /app/tmp/ && \
     mkdir -p ${ARKCASE_APP}/data/arkcase-home && \
     mkdir -p ${ARKCASE_APP}/common && \
     mkdir -p /etc/tls/private && \
     mkdir -p /etc/tls/crt && \
-    yum --assumeyes update && \
+    yum -y install epel-release && \
+    yum -y update && \
     # Nodejs prerequisites to install native-addons from npm
-    yum install --assumeyes gcc gcc-c++ make openssl wget zip unzip
-RUN yum install --assumeyes nodejs
-RUN npm install -g yarn
-
+    yum install -y gcc gcc-c++ make openssl wget zip unzip supervisor nodejs yarn
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "arkcase.war" "/app/arkcase.war"
     #unpack tomcat tar to tomcat directory
@@ -223,7 +221,6 @@ RUN tar -xf apache-tomcat-${TOMCAT_VERSION}.tar.gz && \
     # Remove unwanted package
     yum clean all
 
-RUN yum -y install epel-release
 RUN yum install -y tesseract tesseract-osd qpdf ImageMagick ImageMagick-devel && \
     ln -s /usr/bin/convert /usr/bin/magick &&\
     ln -s /usr/share/tesseract/tessdata/configs/pdf /usr/share/tesseract/tessdata/configs/PDF &&\
@@ -232,13 +229,12 @@ RUN yum install -y tesseract tesseract-osd qpdf ImageMagick ImageMagick-devel &&
     #chown -R "${APP_USER}:${APP_GROUP}" /arkcase
 
 RUN yum -y install openldap-clients
-ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml -Dspring.profiles.active=ldap"
+ENV CATALINA_OPTS="-Dacm.configurationserver.propertyfile=/app/home/.arkcase/acm/conf.yml -Dspring.profiles.active=ldap -Xms1024m -Xmx2048m"
 ENV LD_LIBRARY_PATH="/app/home/.arkcase/libraries"
 ##################################################### ARKCASE: ABOVE ###############################################################
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "/app/tomcat/lib/postgresql-42.5.2.jar"
 ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
-USER "${APP_USER}"
 
 RUN /usr/bin/ln -s /app/data /app/home/.arkcase &&\
     mkdir -p /app/tomcat/bin/logs/ &&\
@@ -249,4 +245,4 @@ EXPOSE 9999
 VOLUME [ "${DATA_DIR}" ]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
 
-ENTRYPOINT [ "/entrypoint" ]
+ENTRYPOINT [ "/usr/bin/supervisord", "-n" ]

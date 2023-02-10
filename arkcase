@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /app/tomcat/bin/catalina.sh run "${@}"
