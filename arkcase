@@ -1,2 +1,5 @@
 #!/bin/bash
+while ! nc -z localhost 9999 &>/dev/null ; do
+	sleep 1
+done
 exec /app/tomcat/bin/catalina.sh run "${@}"
