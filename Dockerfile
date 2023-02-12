@@ -192,6 +192,8 @@ USER "${APP_USER}"
 RUN mkdir -p /app/tomcat/bin/logs/ && \
     mkdir -p /app/logs
 
+USER "root"
+
 EXPOSE 8080
 
 # These may have to disappear in openshift

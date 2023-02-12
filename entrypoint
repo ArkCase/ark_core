@@ -41,6 +41,7 @@ while true ; do
 	say "\tConfig server is not up yet at [${CONFIG_URL}]"
 	NOW="$(date +%s)"
 	[ $(( NOW - START )) -lt ${CONFIG_WAIT} ] || fail "Timed out waiting for configserver to come up at [${CONFIG_URL}]"
+	sleep 2
 done
 
 say "Config server responded - launching Tomcat"
