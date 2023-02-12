@@ -76,12 +76,6 @@ WORKDIR "${BASE_DIR}"
 RUN groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
     useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
-#
-# COPY the application war files
-#
-ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
-ADD "arkcase.ini" "/etc/supervisord.d/"
-
 RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" 
@@ -187,6 +181,9 @@ ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "/app/tomcat/lib/
 ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
 
 RUN keytool -keystore "${JAVA_HOME}/jre/lib/security/cacerts" -storepass changeit -importcert -trustcacerts -file "/app/samba.crt" -alias samba -noprompt
+
+ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
+ADD "arkcase.ini" "/etc/supervisord.d/"
 
 USER "${APP_USER}"
 RUN mkdir -p /app/tomcat/bin/logs/ && \
