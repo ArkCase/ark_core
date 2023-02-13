@@ -44,8 +44,7 @@ ARG BASE_DIR="/app"
 ARG DATA_DIR="${BASE_DIR}/data"
 ARG HOME_DIR="${BASE_DIR}/home"
 ARG CONF_DIR="${BASE_DIR}/conf"
-ARG TEMP_DIR="${BASE_DIR}/tmp"
-ARG WORK_DIR="${BASE_DIR}/work"
+ARG TEMP_DIR="${HOME_DIR}/tmp"
 ARG RESOURCE_PATH="artifacts"
 
 LABEL ORG="ArkCase LLC" \
@@ -64,9 +63,9 @@ ENV APP_UID="${APP_UID}" \
     LC_ALL="en_US.UTF-8" \
     BASE_DIR="${BASE_DIR}" \ 
     DATA_DIR="${DATA_DIR}" \
-    TEMP_DIR="${TEMP_DIR}" \
     HOME_DIR="${HOME_DIR}" \
-    WORK_DIR="${WORK_DIR}"
+    TEMP_DIR="${TEMP_DIR}" \
+    TOMCAT_DIR="${BASE_DIR}/tomcat"
 
 WORKDIR "${BASE_DIR}"
 
@@ -102,11 +101,11 @@ ENV LANG=en_US.UTF-8 \
 #################
 ENV ARKCASE_APP="/app/arkcase" \
     NODE_ENV="production" \
-    PATH="${PATH}:/app/tomcat/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
+    PATH="${PATH}:${TOMCAT_DIR}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
     SSL_CERT="/etc/tls/crt/arkcase-server.crt" \
     SSL_KEY="/etc/tls/private/arkcase-server.pem" \
-    TEMP="${WORK_DIR}" \
-    TMP="${WORK_DIR}"
+    TEMP="${TEMP_DIR}" \
+    TMP="${TEMP_DIR}"
 
 COPY "${RESOURCE_PATH}/server.xml" \
      "${RESOURCE_PATH}/logging.properties" \
@@ -159,15 +158,14 @@ RUN tar -xf "apache-tomcat-${TOMCAT_VER}.tar.gz" && \
     rm -rf "tomcat/webapps"/* "tomcat/temp"/* "tomcat/bin"/*.bat && \
     mv "server.xml" "logging.properties" "tomcat/conf/" && \
     mkdir -p "/tomcat/logs" &&\
-    mv "/app/arkcase.war" "/app/tomcat/arkcase.war" && \
-    mkdir -p "/app/tomcat/webapps/arkcase" && \
-    cd "/app/tomcat/webapps/arkcase" && \
-    jar xvf "/app/tomcat/arkcase.war" && \
-    rm "/app/tomcat/arkcase.war" && \
-    rm "/app/tomcat/webapps/arkcase/WEB-INF/lib"/postgresql-*.jar && \ 
+    mv "/app/arkcase.war" "${TOMCAT_DIR}/arkcase.war" && \
+    mkdir -p "${TOMCAT_DIR}/webapps/arkcase" && \
+    cd "${TOMCAT_DIR}/webapps/arkcase" && \
+    jar xvf "${TOMCAT_DIR}/arkcase.war" && \
+    rm "${TOMCAT_DIR}/arkcase.war" && \
+    rm "${TOMCAT_DIR}/webapps/arkcase/WEB-INF/lib"/postgresql-*.jar && \ 
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
-    #### chown -R tomcat:tomcat /app && \
-    chmod u+x "/app/tomcat/bin"/*.sh
+    chmod u+x "${TOMCAT_DIR}/bin"/*.sh
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
@@ -177,7 +175,7 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 
 ##################################################### ARKCASE: ABOVE ###############################################################
 
-ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "/app/tomcat/lib/postgresql-42.5.2.jar"
+ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "${TOMCAT_DIR}/lib/postgresql-42.5.2.jar"
 ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
 
 RUN keytool -keystore "${JAVA_HOME}/jre/lib/security/cacerts" -storepass changeit -importcert -trustcacerts -file "/app/samba.crt" -alias samba -noprompt
@@ -186,8 +184,10 @@ ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 ADD "arkcase.ini" "/etc/supervisord.d/"
 
 USER "${APP_USER}"
-RUN mkdir -p /app/tomcat/bin/logs/ && \
-    mkdir -p /app/logs
+WORKDIR "${HOME_DIR}"
+RUN mkdir -p "${TOMCAT_DIR}/bin/logs" && \
+    mkdir -p "${TEMP_DIR}" && \
+    mkdir -p "${HOME_DIR}/logs"
 
 USER "root"
 
@@ -196,6 +196,6 @@ EXPOSE 8080
 # These may have to disappear in openshift
 VOLUME [ "${CONF_DIR}" ]
 VOLUME [ "${DATA_DIR}" ]
-VOLUME [ "${WORK_DIR}" ]
+VOLUME [ "${HOME_DIR}" ]
 
 ENTRYPOINT [ "/entrypoint" ]
