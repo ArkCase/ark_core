@@ -1,7 +1,0 @@
-#!/bin/bash
-echo "Waiting for cloudconfig to come up on 9999"
-while ! nc -z localhost 9999 &>/dev/null ; do
-	sleep 1
-done
-echo "Launching Arkcase"
-exec /app/tomcat/bin/catalina.sh run "${@}"
