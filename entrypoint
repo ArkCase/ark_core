@@ -1,0 +1,75 @@
+#!/bin/bash
+set -eu -o pipefail
+
+say() {
+	echo -e "$(date -u -Isec): ${@}"
+}
+
+fail() {
+	say "${@}" 1>&2
+	exit ${EXIT_CODE:-1}
+}
+
+ping_server() {
+	local URL="${1}"
+	/usr/bin/curl -m 5 "${URL}/actuator/health" &>/dev/null
+}
+
+to_boolean() {
+	local RESULT="false"
+	case "${1,,}" in
+		true | t | yes | y | 1 | on | enable | enabled | active ) RESULT="true" ;;
+	esac
+	echo "${RESULT}"
+	return 0
+}
+
+DEFAULT_WAIT=90
+DEFAULT_URL="http://localhost:9999"
+
+[ -v DEVELOPMENT ] || DEVELOPMENT="false"
+# Sanitize to ensure proper value is consumed below
+DEVELOPMENT="$(to_boolean "${DEVELOPMENT}")"
+
+# If not specifically told otherwise, wait up to
+# 90 seconds for the config server to come back up
+[ -v CONFIG_WAIT ] || CONFIG_WAIT=${DEFAULT_WAIT}
+[ -n "${CONFIG_WAIT}" ] || CONFIG_WAIT=${DEFAULT_WAIT}
+[[ ${CONFIG_WAIT} =~ ^(0|[1-9][0-9]*)$ ]] || fail "The wait period must be a number with no leading zeros [${CONFIG_WAIT}]"
+
+[ -v CONFIG_URL ] || CONFIG_URL="${DEFAULT_URL}"
+[ -n "${CONFIG_URL}" ] || fail "The config server URL must be a non-empty string [${CONFIG_URL}]"
+
+[ -v POLL_CONFIG ] || POLL_CONFIG="true"
+POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
+
+if ${POLL_CONFIG} ; then
+	START="$(date +%s)"
+	say "Starting the polling cycle"
+	while true ; do
+		ping_server "${CONFIG_URL}" && break
+	
+		say "\tConfig server is not up yet at [${CONFIG_URL}]"
+		NOW="$(date +%s)"
+		[ $(( NOW - START )) -lt ${CONFIG_WAIT} ] || fail "Timed out waiting for configserver to come up at [${CONFIG_URL}]"
+		sleep 2
+	done
+	say "Config server responded, continuing"
+else
+	say "Config server polling is disabled, continuing"
+fi
+
+say "Launching the main process"
+
+if "${DEVELOPMENT}" ; then
+	[ ${#} -gt 0 ] || set -- "-n"
+	SUPERVISOR="/usr/bin/supervisord"
+	say "Development mode is active, launching as $(id -un): '${SUPERVISOR}' ${@@Q}"
+	exec "${SUPERVISOR}" "${@}"
+fi
+
+[ ${#} -gt 0 ] || set -- "run"
+CATALINA="/app/tomcat/bin/catalina.sh"
+NEXT_USER="core"
+say "Production mode is active, launching as ${NEXT_USER}: ${CATALINA} ${@@Q}"
+exec /bin/su --preserve-environment "${NEXT_USER}" "${CATALINA}" "${@}"
