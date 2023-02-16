@@ -65,7 +65,7 @@ ENV APP_UID="${APP_UID}" \
     DATA_DIR="${DATA_DIR}" \
     HOME_DIR="${HOME_DIR}" \
     TEMP_DIR="${TEMP_DIR}" \
-    TOMCAT_DIR="${BASE_DIR}/tomcat"
+    TOMCAT_HOME="${BASE_DIR}/tomcat"
 
 WORKDIR "${BASE_DIR}"
 
@@ -101,7 +101,7 @@ ENV LANG=en_US.UTF-8 \
 #################
 ENV ARKCASE_APP="/app/arkcase" \
     NODE_ENV="production" \
-    PATH="${PATH}:${TOMCAT_DIR}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
+    PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
     SSL_CERT="/etc/tls/crt/arkcase-server.crt" \
     SSL_KEY="/etc/tls/private/arkcase-server.pem" \
     TEMP="${TEMP_DIR}" \
@@ -128,6 +128,7 @@ RUN yum -y update && \
     yum -y install \
         epel-release && \
     yum -y install \
+        apr-devel \
         gcc \
         gcc-c++ \
         ImageMagick \
@@ -135,9 +136,11 @@ RUN yum -y update && \
         java-1.8.0-openjdk-devel \
         make \
         nodejs \
-        qpdf \
-        openssl \
         openldap-clients \
+        openssl \
+        openssl-devel \
+        qpdf \
+        redhat-rpm-config \
         supervisor \
         tesseract \
         tesseract-osd \
@@ -158,14 +161,24 @@ RUN tar -xf "apache-tomcat-${TOMCAT_VER}.tar.gz" && \
     rm -rf "tomcat/webapps"/* "tomcat/temp"/* "tomcat/bin"/*.bat && \
     mv "server.xml" "logging.properties" "tomcat/conf/" && \
     mkdir -p "/tomcat/logs" &&\
-    mv "/app/arkcase.war" "${TOMCAT_DIR}/arkcase.war" && \
-    mkdir -p "${TOMCAT_DIR}/webapps/arkcase" && \
-    cd "${TOMCAT_DIR}/webapps/arkcase" && \
-    jar xvf "${TOMCAT_DIR}/arkcase.war" && \
-    rm "${TOMCAT_DIR}/arkcase.war" && \
-    rm "${TOMCAT_DIR}/webapps/arkcase/WEB-INF/lib"/postgresql-*.jar && \ 
+    mv "/app/arkcase.war" "${TOMCAT_HOME}/arkcase.war" && \
+    mkdir -p "${TOMCAT_HOME}/webapps/arkcase" && \
+    cd "${TOMCAT_HOME}/webapps/arkcase" && \
+    jar xvf "${TOMCAT_HOME}/arkcase.war" && \
+    rm "${TOMCAT_HOME}/arkcase.war" && \
+    rm "${TOMCAT_HOME}/webapps/arkcase/WEB-INF/lib"/postgresql-*.jar && \ 
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
-    chmod u+x "${TOMCAT_DIR}/bin"/*.sh
+    chmod u+x "${TOMCAT_HOME}/bin"/*.sh && \
+    mkdir -p "${TOMCAT_HOME}/bin/native" && \
+    tar -C "${TOMCAT_HOME}/bin/native" -xzvf "${TOMCAT_HOME}/bin/tomcat-native.tar.gz" --strip-components=1 && \
+    pushd "${TOMCAT_HOME}/bin/native/native" && \
+    ./configure --with-apr="/usr/bin/apr-1-config" --with-java-home="${JAVA_HOME}" --with-ssl=yes --prefix="${TOMCAT_HOME}" && \
+    make && \
+    make install && \
+    popd && \
+    rm -rf "${TOMCAT_HOME}/bin/native"
+
+ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}"
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
@@ -175,7 +188,7 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 
 ##################################################### ARKCASE: ABOVE ###############################################################
 
-ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "${TOMCAT_DIR}/lib/postgresql-42.5.2.jar"
+ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "${TOMCAT_HOME}/lib/postgresql-42.5.2.jar"
 ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
 
 RUN keytool -keystore "${JAVA_HOME}/jre/lib/security/cacerts" -storepass changeit -importcert -trustcacerts -file "/app/samba.crt" -alias samba -noprompt
@@ -185,7 +198,7 @@ ADD "arkcase.ini" "/etc/supervisord.d/"
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
-RUN mkdir -p "${TOMCAT_DIR}/bin/logs" && \
+RUN mkdir -p "${TOMCAT_HOME}/bin/logs" && \
     mkdir -p "${TEMP_DIR}" && \
     mkdir -p "${HOME_DIR}/logs"
 
