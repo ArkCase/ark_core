@@ -49,7 +49,7 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 [ -v INIT_SSL_DIR ] || INIT_SSL_DIR="${INIT_DIR}/ssl"
 if [ -d "${INIT_SSL_DIR}" ] ; then
 	say "Installing the trusted certificates"
-	SSL_TARGET="/usr/share/pki/ca-trust-source"
+	SSL_TARGET="/etc/pki/ca-trust-source"
 	tar -C "${INIT_SSL_DIR}" -cf - . | tar -C "${SSL_TARGET}" -xvf -
 	chown -R root:root "${SSL_TARGET}"
 	chmod -R 0440:0440 "${SSL_TARGET}"
