@@ -189,9 +189,6 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 ##################################################### ARKCASE: ABOVE ###############################################################
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "${TOMCAT_HOME}/lib/postgresql-42.5.2.jar"
-ADD --chown="${APP_USER}:${APP_GROUP}" "samba.crt" "/app/samba.crt"
-
-RUN keytool -keystore "${JAVA_HOME}/jre/lib/security/cacerts" -storepass changeit -importcert -trustcacerts -file "/app/samba.crt" -alias samba -noprompt
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 ADD "arkcase.ini" "/etc/supervisord.d/"

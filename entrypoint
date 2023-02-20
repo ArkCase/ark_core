@@ -43,6 +43,20 @@ DEVELOPMENT="$(to_boolean "${DEVELOPMENT}")"
 [ -v POLL_CONFIG ] || POLL_CONFIG="true"
 POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 
+[ -v BASE_DIR ] || BASE_DIR="/app"
+[ -v INIT_DIR ] || INIT_DIR="${BASE_DIR}/init"
+
+[ -v INIT_SSL_DIR ] || INIT_SSL_DIR="${INIT_DIR}/ssl"
+if [ -d "${INIT_SSL_DIR}" ] ; then
+	say "Installing the trusted certificates"
+	SSL_TARGET="/usr/share/pki/ca-trust-source"
+	tar -C "${INIT_SSL_DIR}" -cf - . | tar -C "${SSL_TARGET}" -xvf -
+	chown -R root:root "${SSL_TARGET}"
+	chmod -R 0440:0440 "${SSL_TARGET}"
+	say "Updating the trusted certificates"
+	/usr/bin/update-ca-trust extract
+fi
+
 if ${POLL_CONFIG} ; then
 	START="$(date +%s)"
 	say "Starting the polling cycle"
