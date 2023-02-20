@@ -52,7 +52,7 @@ if [ -d "${INIT_SSL_DIR}" ] ; then
 	SSL_TARGET="/etc/pki/ca-trust/source"
 	tar -C "${INIT_SSL_DIR}" -cf - . | tar -C "${SSL_TARGET}" -xvf -
 	chown -R root:root "${SSL_TARGET}"
-	chmod -R 0440:0440 "${SSL_TARGET}"
+	chmod -R 0440 "${SSL_TARGET}"
 	say "Updating the trusted certificates"
 	/usr/bin/update-ca-trust extract
 fi
