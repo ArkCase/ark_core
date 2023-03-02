@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euo pipefail
+
+say() {
+	echo -e "$(date -u -Isec): ${@}"
+}
+
+fail() {
+	say "${@}" 1>&2
+	exit ${EXIT_CODE:-1}
+}
+
+[ "$(id -u)" -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "${0}" "${@}"
+
+[ -v BASE_DIR ] || BASE_DIR="/app"
+[ -v INIT_DIR ] || INIT_DIR="${BASE_DIR}/init"
+[ -v INIT_SSL_DIR ] || INIT_SSL_DIR="${INIT_DIR}/ssl"
+if [ ! -d "${INIT_SSL_DIR}" ] ; then
+	say "No SSL certificates found to update"
+	exit 0
+fi
+
+REPLACE_FLAG=""
+[ -v INIT_SSL_REPLACE ] || INIT_SSL_REPLACE="false"
+case "${INIT_SSL_REPLACE,,}" in
+	true | t | 1 | yes | on | enabled | enable ) REPLACE_FLAG="u" ;;
+esac
+
+say "Deploying the trusted certificates"
+SSL_TARGET="/etc/pki/ca-trust/source"
+
+[ -z "${REPLACE_FLAG}" ] || say "WARNING: will replace any existing files during the certificate copy"
+
+#
+# We use this approach b/c this will only take regular files (no symlinks!!). This
+# is important for security purposes. It will also not clobber existing files - again,
+# for security purposes.
+#
+( cd "${INIT_SSL_DIR}" && /usr/bin/find . -type f | /usr/bin/sort ) |  \
+	( cd "${INIT_SSL_DIR}" && /usr/bin/cpio -p${REPLACE_FLAG}madv "${SSL_TARGET}" ) | \
+	/usr/bin/sed -e 's;^;\t;g'
+/usr/bin/chown -R root:root "${SSL_TARGET}"
+/usr/bin/chmod -R 0440 "${SSL_TARGET}"
+say "Updating the trusted certificates"
+exec /usr/bin/update-ca-trust extract

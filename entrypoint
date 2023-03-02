@@ -46,16 +46,10 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 [ -v BASE_DIR ] || BASE_DIR="/app"
 [ -v INIT_DIR ] || INIT_DIR="${BASE_DIR}/init"
 
-[ -v INIT_SSL_DIR ] || INIT_SSL_DIR="${INIT_DIR}/ssl"
-if [ -d "${INIT_SSL_DIR}" ] ; then
-	say "Installing the trusted certificates"
-	SSL_TARGET="/etc/pki/ca-trust/source"
-	tar -C "${INIT_SSL_DIR}" -cf - . | tar -C "${SSL_TARGET}" -xvf -
-	chown -R root:root "${SSL_TARGET}"
-	chmod -R 0440 "${SSL_TARGET}"
-	say "Updating the trusted certificates"
-	/usr/bin/update-ca-trust extract
-fi
+#
+# Update the SSL certificate trusts
+#
+/update-ssl
 
 if ${POLL_CONFIG} ; then
 	START="$(date +%s)"
@@ -75,15 +69,7 @@ fi
 
 say "Launching the main process"
 
-if "${DEVELOPMENT}" ; then
-	[ ${#} -gt 0 ] || set -- "-n"
-	SUPERVISOR="/usr/bin/supervisord"
-	say "Development mode is active, launching as $(id -un): '${SUPERVISOR}' ${@@Q}"
-	exec "${SUPERVISOR}" "${@}"
-fi
-
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="/app/tomcat/bin/catalina.sh"
-NEXT_USER="core"
-say "Production mode is active, launching as ${NEXT_USER}: ${CATALINA} ${@@Q}"
-exec /bin/su --preserve-environment "${NEXT_USER}" "${CATALINA}" "${@}"
+say "Launching as: ${CATALINA} ${@@Q}"
+exec "${CATALINA}" "${@}"

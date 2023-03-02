@@ -40,6 +40,8 @@ ARG APP_UID="1997"
 ARG APP_GID="${APP_UID}"
 ARG APP_USER="${PKG}"
 ARG APP_GROUP="${APP_USER}"
+ARG ACM_GID="10000"
+ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
 ARG DATA_DIR="${BASE_DIR}/data"
 ARG HOME_DIR="${BASE_DIR}/home"
@@ -72,8 +74,9 @@ WORKDIR "${BASE_DIR}"
 #
 # Create the requisite user and group
 #
-RUN groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
-    useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
+RUN groupadd --system --gid "${ACM_GID}" "${ACM_GROUP}" && \
+    groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
+    useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
 RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
@@ -141,7 +144,7 @@ RUN yum -y update && \
         openssl-devel \
         qpdf \
         redhat-rpm-config \
-        supervisor \
+        sudo \
         tesseract \
         tesseract-osd \
         unzip \
@@ -191,15 +194,17 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 ADD --chown="${APP_USER}:${APP_GROUP}" "postgresql-42.5.2.jar" "${TOMCAT_HOME}/lib/postgresql-42.5.2.jar"
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
-ADD "arkcase.ini" "/etc/supervisord.d/"
+
+COPY --chown=root:root update-ssl /
+COPY --chown=root:root 00-update-ssl /etc/sudoers.d
+RUN chmod 0640 /etc/sudoers.d/00-update-ssl && \
+    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/00-update-ssl
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
 RUN mkdir -p "${TOMCAT_HOME}/bin/logs" && \
     mkdir -p "${TEMP_DIR}" && \
     mkdir -p "${HOME_DIR}/logs"
-
-USER "root"
 
 EXPOSE 8080
 
