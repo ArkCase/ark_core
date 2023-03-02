@@ -81,7 +81,7 @@ if [ -v INIT_SSL_SERVERS ] ; then
 	# The INIT_SSL_SERVERS variable is a comma-separated list of coordinates
 	# in the form [serverName@]serverAddressOrHostname:port, from where SSL
 	# certificates should be downloaded and added to the trust store
-	readarray -d -t SERVERS < <(echo -n "${INIT_SSL_SERVERS}")
+	readarray -d "," -t SERVERS < <(echo -n "${INIT_SSL_SERVERS}")
 	for SERVER in "${SERVERS[@]}" ; do
 		[ -n "${SERVER}" ] || continue
 		say "Downloading additional certificates from ${SERVER} ..."
