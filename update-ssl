@@ -79,22 +79,31 @@ fi
 
 if [ -v INIT_SSL_SERVERS ] ; then
 	# The INIT_SSL_SERVERS variable is a comma-separated list of coordinates
-	# in the form [serverName@]serverAddressOrHostname:port, from where SSL
-	# certificates should be downloaded and added to the trust store
+	# in the form [serverName@]serverAddressOrHostname:port, or in the form
+	# of http/https URLS, from where SSL CA certificates should be downloaded
+	# and added to the trust store
 	readarray -d "," -t SERVERS < <(echo -n "${INIT_SSL_SERVERS}")
+	ANCHORS="${SSL_TARGET}/anchors"
 	for SERVER in "${SERVERS[@]}" ; do
 		[ -n "${SERVER}" ] || continue
 		say "Downloading additional certificates from ${SERVER} ..."
-		[[ "${SERVER}" =~ ^(([^@]+)@)?(([^:]+):([0-9]+))$ ]] || fail "\tInvalid certificate server spec: [${SERVER}]"
-		SERVER_NAME="${BASH_REMATCH[2]}"
-		HOST_NAME="${BASH_REMATCH[4]}"
-		PORT="${BASH_REMATCH[5]}"
-		if [ -n "${SERVER_NAME}" ] ; then
-			is_valid_hostname "${SERVER_NAME}" || fail "\tInvalid server name [${SERVER_NAME}] in spec: [${SERVER}]"
+		if [[ "${SERVER}" =~ ^(([^@]+)@)?(([^:]+):([0-9]+))$ ]] ; then
+			SERVER_NAME="${BASH_REMATCH[2]}"
+			HOST_NAME="${BASH_REMATCH[4]}"
+			PORT="${BASH_REMATCH[5]}"
+			if [ -n "${SERVER_NAME}" ] ; then
+				is_valid_hostname "${SERVER_NAME}" || fail "\tInvalid server name [${SERVER_NAME}] in spec: [${SERVER}]"
+			fi
+			is_valid_hostname "${HOST_NAME}" || fail "\tInvalid host name [${HOST_NAME}] in spec: [${SERVER}]"
+			is_valid_port "${PORT}" || fail "\tInvalid port number [${PORT}] in spec: [${SERVER}]"
+			download_certificate "${HOST_NAME}" "${SERVER_NAME}" "${PORT}" "${ANCHORS}" || fail "\tFailed to download the certificate from [${SERVER}]"
+		elif [[ "${SERVER}" =~ ^https?://.*$ ]] ; then
+			# It's an HTTP URL, so fetch it from there
+			read SUM rest < <(echo -n "${SERVER}" | md5sum)
+			/usr/bin/curl -kL -o "${ANCHORS}/downloaded-${SUM}.crt" "${SERVER}" || fail "\tFailed to download the certificate from [${SERVER}]"
+		else
+			fail "\tInvalid certificate server spec: [${SERVER}]"
 		fi
-		is_valid_hostname "${HOST_NAME}" || fail "\tInvalid host name [${HOST_NAME}] in spec: [${SERVER}]"
-		is_valid_port "${PORT}" || fail "\tInvalid port number [${PORT}] in spec: [${SERVER}]"
-		download_certificate "${HOST_NAME}" "${SERVER_NAME}" "${PORT}" "${SSL_TARGET}" || fail "\tFailed to download the certificate from [${SERVER}]"
 		INSTALLED="true"
 	done
 fi
