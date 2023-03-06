@@ -56,7 +56,7 @@ if ${POLL_CONFIG} ; then
 	say "Starting the polling cycle"
 	while true ; do
 		ping_server "${CONFIG_URL}" && break
-	
+
 		say "\tConfig server is not up yet at [${CONFIG_URL}]"
 		NOW="$(date +%s)"
 		[ $(( NOW - START )) -lt ${CONFIG_WAIT} ] || fail "Timed out waiting for configserver to come up at [${CONFIG_URL}]"
