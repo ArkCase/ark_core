@@ -18,7 +18,7 @@
 #
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="2021.03.24"
+ARG VER="2021.03.25"
 ARG PKG="core"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
@@ -56,7 +56,9 @@ LABEL ORG="ArkCase LLC" \
       APP="Cloudconfig" \
       VERSION="${VER}"
 
+#
 # Environment variables
+#
 ENV APP_UID="${APP_UID}" \
     APP_GID="${APP_GID}" \
     APP_USER="${APP_USER}" \
@@ -86,12 +88,9 @@ RUN rm -rf /tmp/* && \
 
 ##################################################### ARKCASE: BELOW ###############################################################
 
-ARG BUILD_SERVER="iad032-1san01.appdev.armedia.com"
-
 ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
-ARG SYMMETRIC_KEY="9999999999999999999999"
 ARG RESOURCE_PATH="artifacts"
 ARG YARN_SRC
 ARG TOMCAT_SRC
@@ -107,15 +106,11 @@ ENV LANG=en_US.UTF-8 \
 ENV ARKCASE_APP="${BASE_DIR}/arkcase" \
     NODE_ENV="production" \
     PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
-    SSL_CERT="/etc/tls/crt/arkcase-server.crt" \
-    SSL_KEY="/etc/tls/private/arkcase-server.pem" \
     TEMP="${TEMP_DIR}" \
     TMP="${TEMP_DIR}"
 
 COPY "${RESOURCE_PATH}/server.xml" \
-     "${RESOURCE_PATH}/logging.properties" \
-     "${RESOURCE_PATH}/arkcase-server.crt" \
-     "${RESOURCE_PATH}/arkcase-server.pem" ./
+     "${RESOURCE_PATH}/logging.properties" ./
 
 #
 # TODO: This is done much more cleanly with Maven and its dependency retrieval mechanisms
