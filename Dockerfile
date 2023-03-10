@@ -2,14 +2,14 @@
 #
 # How to build:
 #
-# docker build -t 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_core:latest .
-# docker push 345280441424.dkr.ecr.ap-south-1.amazonaws.com/ark_core:latest
+# docker build -t ${BASE_REGISTRY}/arkcase/core:latest .
+# docker push ${BASE_REGISTRY}/arkcase/core:latest
 #
 # How to run: (Helm)
 #
 # helm repo add arkcase https://arkcase.github.io/ark_helm_charts/
-# helm install ark_cloudconfig arkcase/ark_cloudconfig
-# helm uninstall ark_cloudconfig
+# helm install core arkcase/core
+# helm uninstall core
 #
 ###########################################################################################################
 
