@@ -46,10 +46,10 @@ ARG APP_GROUP="${APP_USER}"
 ARG ACM_GID="10000"
 ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
-ARG DATA_DIR="${BASE_DIR}/data"
-ARG LOGS_DIR="${BASE_DIR}/logs"
 ARG HOME_DIR="${BASE_DIR}/home"
-ARG TEMP_DIR="${HOME_DIR}/tmp"
+ARG TEMP_DIR="${HOME_DIR}/temp"
+ARG WORK_DIR="${HOME_DIR}/work"
+ARG LOGS_DIR="${BASE_DIR}/logs"
 ARG TOMCAT_HOME="${BASE_DIR}/tomcat"
 ARG RESOURCE_PATH="artifacts"
 
@@ -70,9 +70,10 @@ ENV APP_UID="${APP_UID}" \
     LANGUAGE="en_US:en" \
     LC_ALL="en_US.UTF-8" \
     BASE_DIR="${BASE_DIR}" \ 
-    DATA_DIR="${DATA_DIR}" \
     HOME_DIR="${HOME_DIR}" \
     TEMP_DIR="${TEMP_DIR}" \
+    WORK_DIR="${WORK_DIR}" \
+    LOGS_DIR="${LOGS_DIR}" \
     TOMCAT_HOME="${TOMCAT_HOME}"
 
 WORKDIR "${BASE_DIR}"
@@ -178,7 +179,9 @@ RUN mv -vf "server.xml" "logging.properties" "${TOMCAT_HOME}/conf/" && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
-ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}" \
+    CATALINA_TMPDIR="${TEMP_DIR}/tomcat/temp" \
+    CATALINA_OUT="${LOGS_DIR}/catalina.out" \
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
@@ -204,13 +207,7 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/logs" && \
 EXPOSE 8080
 
 # These may have to disappear in openshift
-VOLUME [ "${DATA_DIR}" ]
 VOLUME [ "${HOME_DIR}" ]
 VOLUME [ "${LOGS_DIR}" ]
-
-# These are required for Tomcat
-VOLUME [ "${TOMCAT_HOME}/logs" ]
-VOLUME [ "${TOMCAT_HOME}/temp" ]
-VOLUME [ "${TOMCAT_HOME}/work" ]
 
 ENTRYPOINT [ "/entrypoint" ]
