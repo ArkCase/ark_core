@@ -181,7 +181,7 @@ RUN mv -vf "server.xml" "logging.properties" "${TOMCAT_HOME}/conf/" && \
 
 ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}" \
     CATALINA_TMPDIR="${TEMP_DIR}/tomcat/temp" \
-    CATALINA_OUT="${LOGS_DIR}/catalina.out" \
+    CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
