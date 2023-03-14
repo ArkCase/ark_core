@@ -47,9 +47,10 @@ ARG ACM_GID="10000"
 ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
 ARG DATA_DIR="${BASE_DIR}/data"
+ARG LOGS_DIR="${BASE_DIR}/logs"
 ARG HOME_DIR="${BASE_DIR}/home"
-ARG CONF_DIR="${BASE_DIR}/conf"
 ARG TEMP_DIR="${HOME_DIR}/tmp"
+ARG TOMCAT_HOME="${BASE_DIR}/tomcat"
 ARG RESOURCE_PATH="artifacts"
 
 LABEL ORG="ArkCase LLC" \
@@ -72,7 +73,7 @@ ENV APP_UID="${APP_UID}" \
     DATA_DIR="${DATA_DIR}" \
     HOME_DIR="${HOME_DIR}" \
     TEMP_DIR="${TEMP_DIR}" \
-    TOMCAT_HOME="${BASE_DIR}/tomcat"
+    TOMCAT_HOME="${TOMCAT_HOME}"
 
 WORKDIR "${BASE_DIR}"
 
@@ -203,8 +204,13 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/logs" && \
 EXPOSE 8080
 
 # These may have to disappear in openshift
-VOLUME [ "${CONF_DIR}" ]
 VOLUME [ "${DATA_DIR}" ]
 VOLUME [ "${HOME_DIR}" ]
+VOLUME [ "${LOGS_DIR}" ]
+
+# These are required for Tomcat
+VOLUME [ "${TOMCAT_HOME}/logs" ]
+VOLUME [ "${TOMCAT_HOME}/temp" ]
+VOLUME [ "${TOMCAT_HOME}/work" ]
 
 ENTRYPOINT [ "/entrypoint" ]
