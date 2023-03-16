@@ -113,7 +113,8 @@ ENV ARKCASE_APP="${BASE_DIR}/arkcase" \
     TMP="${TEMP_DIR}"
 
 COPY "${RESOURCE_PATH}/server.xml" \
-     "${RESOURCE_PATH}/logging.properties" ./
+     "${RESOURCE_PATH}/logging.properties" \
+     "${RESOURCE_PATH}/catalina.properties" ./
 
 #
 # TODO: This is done much more cleanly with Maven and its dependency retrieval mechanisms
@@ -170,7 +171,7 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
     rm -rf "${TOMCAT_HOME}/bin/native"
 
     # Deploy the ArkCase stuff
-RUN mv -vf "server.xml" "logging.properties" "${TOMCAT_HOME}/conf/" && \
+RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
     mkdir -vp "${TOMCAT_HOME}/webapps/arkcase" && \
     cd "${TOMCAT_HOME}/webapps/arkcase" && \
     jar xvf "${BASE_DIR}/arkcase.war" && \
