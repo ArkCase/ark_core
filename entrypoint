@@ -67,6 +67,14 @@ else
 	say "Config server polling is disabled, continuing"
 fi
 
+if [ -v WORK_DIR ] ; then
+	[ -d "${WORK_DIR}" ] || mkdir -p "${WORK_DIR}" || fail "Failed to create the Tomcat work directory [${WORK_DIR}]"
+fi
+
+if [ -v CATALINA_TMPDIR ] ; then
+	[ -d "${CATALINA_TMPDIR}" ] || mkdir -p "${CATALINA_TMPDIR}" || fail "Failed to create the Tomcat temp directory [${CATALINA_TMPDIR}]"
+fi
+
 say "Launching the main process"
 
 [ ${#} -gt 0 ] || set -- "run"

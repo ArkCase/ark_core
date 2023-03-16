@@ -171,7 +171,6 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
 
     # Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "${TOMCAT_HOME}/conf/" && \
-    mkdir -vp "/tomcat/logs" && \
     mkdir -vp "${TOMCAT_HOME}/webapps/arkcase" && \
     cd "${TOMCAT_HOME}/webapps/arkcase" && \
     jar xvf "${BASE_DIR}/arkcase.war" && \
@@ -180,7 +179,7 @@ RUN mv -vf "server.xml" "logging.properties" "${TOMCAT_HOME}/conf/" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
 ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}" \
-    CATALINA_TMPDIR="${TEMP_DIR}/tomcat/temp" \
+    CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
@@ -200,9 +199,10 @@ RUN chmod 0640 /etc/sudoers.d/00-update-ssl && \
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
-RUN mkdir -p "${TOMCAT_HOME}/bin/logs" && \
-    mkdir -p "${TEMP_DIR}" && \
-    mkdir -p "${HOME_DIR}/logs"
+RUN mkdir -p \
+        "${TEMP_DIR}" \
+        "${WORK_DIR}" \
+        "${CATALINA_TMPDIR}"
 
 EXPOSE 8080
 
