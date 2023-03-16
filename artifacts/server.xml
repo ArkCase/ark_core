@@ -149,7 +149,7 @@
       </Realm>
 
       <Host name="localhost"  appBase="webapps"
-            unpackWARs="true" autoDeploy="true" workDir="${env.WORK_DIR}">
+            unpackWARs="true" autoDeploy="true" workDir="${WORK_DIR}">
 
         <!-- SingleSignOn valve, share authentication between web applications
              Documentation at: /docs/config/valve.html -->
@@ -160,7 +160,7 @@
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html
              Note: The pattern used is equivalent to using pattern="common" -->
-        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="${env.LOGS_DIR}"
+        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="${LOGS_DIR}"
                prefix="localhost_access_log" suffix=".txt"
                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
