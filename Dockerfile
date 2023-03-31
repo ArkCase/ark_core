@@ -18,7 +18,7 @@
 #
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="2021.03.25"
+ARG VER="2021.03.26"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
