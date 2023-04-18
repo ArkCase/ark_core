@@ -2,8 +2,7 @@
 #
 # How to build:
 #
-# docker build -t ${BASE_REGISTRY}/arkcase/core:latest .
-# docker push ${BASE_REGISTRY}/arkcase/core:latest
+# docker build -t arkcase/core:latest .
 #
 # How to run: (Helm)
 #
@@ -16,6 +15,9 @@
 #
 # Basic Parameters
 #
+ARG PUBLIC_REGISTRY="public.ecr.aws"
+ARG BASE_REPO="arkcase/base"
+ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="2021.03.26"
@@ -24,11 +26,8 @@ ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
 ARG ARKCASE_SRC="https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/acm-standard-applications/arkcase/${VER}/arkcase-${VER}.war"
-ARG BASE_REGISTRY
-ARG BASE_REPO="arkcase/base"
-ARG BASE_TAG="8.7.0"
 
-FROM "${BASE_REGISTRY}/${BASE_REPO}:${BASE_TAG}"
+FROM "${PUBLIC_REGISTRY}/${BASE_REPO}:${BASE_TAG}"
 
 #
 # Basic Parameters
