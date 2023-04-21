@@ -20,12 +20,11 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="2021.03.26"
+ARG VER="1.0.0"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
-ARG ARKCASE_SRC="https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/acm-standard-applications/arkcase/${VER}/arkcase-${VER}.war"
 
 FROM "${PUBLIC_REGISTRY}/${BASE_REPO}:${BASE_TAG}"
 
@@ -37,7 +36,6 @@ ARG OS
 ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
-ARG ARKCASE_SRC
 ARG APP_UID="1997"
 ARG APP_GID="${APP_UID}"
 ARG APP_USER="core"
@@ -97,6 +95,7 @@ ARG RESOURCE_PATH="artifacts"
 ARG YARN_SRC
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
+ARG WEBAPP_DIR="${TOMCAT_HOME}/webapps/arkcase"
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -105,7 +104,7 @@ ENV LANG=en_US.UTF-8 \
 #################
 # Build Arkcase
 #################
-ENV ARKCASE_APP="${BASE_DIR}/arkcase" \
+ENV WEBAPP_DIR="${WEBAPP_DIR}" \
     NODE_ENV="production" \
     PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
     TEMP="${TEMP_DIR}" \
@@ -114,11 +113,6 @@ ENV ARKCASE_APP="${BASE_DIR}/arkcase" \
 COPY "${RESOURCE_PATH}/server.xml" \
      "${RESOURCE_PATH}/logging.properties" \
      "${RESOURCE_PATH}/catalina.properties" ./
-
-#
-# TODO: This is done much more cleanly with Maven and its dependency retrieval mechanisms
-#
-ADD --chown="${APP_USER}:${APP_GROUP}" "${ARKCASE_SRC}" "${BASE_DIR}/arkcase.war"
 
 # ADD yarn repo and nodejs package
 ADD "${YARN_SRC}" "/etc/yum.repos.d/"
@@ -171,10 +165,7 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
 
     # Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
-    mkdir -vp "${TOMCAT_HOME}/webapps/arkcase" && \
-    cd "${TOMCAT_HOME}/webapps/arkcase" && \
-    jar xvf "${BASE_DIR}/arkcase.war" && \
-    rm -vf "${BASE_DIR}/arkcase.war" && \
+    mkdir -vp "${WEBAPP_DIR}" && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
@@ -185,8 +176,6 @@ ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}" \
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
     rm -rf /tmp/* 
-    #mkdir -p /arkcase/runtime/default/spring/ && \
-    #chown -R "${APP_USER}:${APP_GROUP}" /arkcase
 
 ##################################################### ARKCASE: ABOVE ###############################################################
 
@@ -209,5 +198,6 @@ EXPOSE 8080
 # These may have to disappear in openshift
 VOLUME [ "${HOME_DIR}" ]
 VOLUME [ "${LOGS_DIR}" ]
+VOLUME [ "${WEBAPP_DIR}" ]
 
 ENTRYPOINT [ "/entrypoint" ]
