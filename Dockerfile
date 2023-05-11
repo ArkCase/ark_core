@@ -37,9 +37,13 @@ ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
 ARG APP_UID="1997"
-ARG APP_GID="${APP_UID}"
 ARG APP_USER="core"
+ARG APP_GID="${APP_UID}"
 ARG APP_GROUP="${APP_USER}"
+ARG DEV_UID="1000"
+ARG DEV_USER="developer"
+ARG DEV_GID="${DEV_UID}"
+ARG DEV_GROUP="${DEV_USER}"
 ARG ACM_GID="10000"
 ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
@@ -59,9 +63,13 @@ LABEL ORG="ArkCase LLC" \
 # Environment variables
 #
 ENV APP_UID="${APP_UID}" \
-    APP_GID="${APP_GID}" \
     APP_USER="${APP_USER}" \
+    APP_GID="${APP_GID}" \
     APP_GROUP="${APP_GROUP}" \
+    DEV_UID="${DEV_UID}" \
+    DEV_USER="${DEV_USER}" \
+    DEV_GID="${DEV_GID}" \
+    DEV_GROUP="${DEV_GROUP}" \
     JAVA_HOME="/usr/lib/jvm/java" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
@@ -80,7 +88,9 @@ WORKDIR "${BASE_DIR}"
 #
 RUN groupadd --system --gid "${ACM_GID}" "${ACM_GROUP}" && \
     groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
-    useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
+    useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
+    groupadd --gid "${DEV_GID}" "${DEV_GROUP}" && \
+    useradd  --uid "${DEV_UID}" --gid "${DEV_GID}" --groups "${APP_GROUP},${ACM_GROUP}" "${DEV_USER}"
 
 RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
