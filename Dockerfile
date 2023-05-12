@@ -20,7 +20,7 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.1.0"
+ARG VER="1.2.0"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
@@ -40,10 +40,6 @@ ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
 ARG APP_GROUP="${APP_USER}"
-ARG DEV_UID="1000"
-ARG DEV_USER="developer"
-ARG DEV_GID="${DEV_UID}"
-ARG DEV_GROUP="${DEV_USER}"
 ARG ACM_GID="10000"
 ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
@@ -66,10 +62,7 @@ ENV APP_UID="${APP_UID}" \
     APP_USER="${APP_USER}" \
     APP_GID="${APP_GID}" \
     APP_GROUP="${APP_GROUP}" \
-    DEV_UID="${DEV_UID}" \
-    DEV_USER="${DEV_USER}" \
-    DEV_GID="${DEV_GID}" \
-    DEV_GROUP="${DEV_GROUP}" \
+    ACM_GROUP="${ACM_GROUP}" \
     JAVA_HOME="/usr/lib/jvm/java" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
@@ -88,9 +81,7 @@ WORKDIR "${BASE_DIR}"
 #
 RUN groupadd --gid "${ACM_GID}" "${ACM_GROUP}" && \
     groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
-    groupadd --gid "${DEV_GID}" "${DEV_GROUP}" && \
-    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP},${DEV_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
-    useradd  --uid "${DEV_UID}" --gid "${DEV_GROUP}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
+    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
 RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
@@ -194,7 +185,12 @@ ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 COPY --chown=root:root update-ssl /
 COPY --chown=root:root 00-update-ssl /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/00-update-ssl && \
-    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/00-update-ssl
+    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/00-update-ssl 
+
+COPY --chown=root:root add-developer /
+COPY --chown=root:root 01-add-developer /etc/sudoers.d
+RUN chmod 0640 /etc/sudoers.d/01-add-developer && \
+    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-add-developer
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"

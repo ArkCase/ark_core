@@ -1,0 +1,98 @@
+#!/bin/bash
+set -euo pipefail
+
+say() {
+	echo -e "$(date -u -Isec): ${@}"
+}
+
+fail() {
+	say "${@}" 1>&2
+	exit ${EXIT_CODE:-1}
+}
+
+to_boolean() {
+	case "${1,,}" in
+		true | t | 1 | yes | on | enabled | enable ) echo "true" ;;
+		* ) echo "false" ;;
+	esac
+}
+
+is_id_assigned() {
+	local DB="${1}"
+	local ID="${2}"
+	getent "${DB}" | awk -F ':' '{ print $3 }' | sort -nu | grep -q "^${ID}$" && return 0
+	return 1
+}
+
+get_name() {
+	local DB="${1}"
+	local ID="${2}"
+	IFS=":" read NAME REST < <(getent "${DB}" "${ID}")
+	echo "${NAME}"
+}
+
+is_uid_assigned() {
+	is_id_assigned "passwd" "${1}"
+	return ${?}
+}
+
+get_user_name() {
+	get_name "passwd" "${1}"
+}
+
+is_gid_assigned() {
+	is_id_assigned "group" "${1}"
+	return ${?}
+}
+
+get_group_name() {
+	get_name "group" "${1}"
+}
+
+[ "$(id -u)" -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "${0}" "${@}"
+
+[ -v DEVELOPMENT ] || DEVELOPMENT="false"
+DEVELOPMENT="$(to_boolean "${DEVELOPMENT}")"
+
+if ! ${DEVELOPMENT} ; then
+	say "Development mode is not active. Will not perform user/group modifications"
+	exit 0
+fi
+
+DEV_USER="developer"
+DEV_GROUP="${DEV_USER}"
+
+[ -v DEV_GID ] || DEV_GID="1000"
+[[ "${DEV_GID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_GID ${DEV_GID} is not a valid number"
+
+if is_gid_assigned "${DEV_GID}" ; then
+	DEV_GROUP="$(get_group_name "${DEV_GID}")"
+	say "Using the existing development group named [${DEV_GROUP}] (id=${DEV_GID})"
+else
+	say "Creating a new development group named [${DEV_GROUP}] (id=${DEV_GID})"
+	groupadd --gid "${DEV_GID}" "${DEV_GROUP}"
+fi
+
+[ -v DEV_UID ] || DEV_UID="1000"
+[[ "${DEV_UID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_UID ${DEV_UID} is not a valid number"
+
+if is_uid_assigned "${DEV_UID}" ; then
+	DEV_USER="$(get_user_name "${DEV_UID}")"
+	say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID})"
+else
+	say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID})"
+	useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
+fi
+
+for n in "${APP_USER}" "${DEV_USER}" ; do
+	say "Adding the user ${n} to groups ${DEV_GROUP}, ${ACM_GROUP}, and ${APP_GROUP}"
+	usermod --append --groups "${DEV_GROUP},${ACM_GROUP},${APP_GROUP}" "${n}"
+done
+
+say "----------"
+say "Application user = $(id "${APP_USER}")"
+say "Application group = ${APP_GROUP}"
+say "----------"
+say "Development user = $(id "${DEV_USER}")"
+say "Development group = ${DEV_GROUP}"
+say "----------"
