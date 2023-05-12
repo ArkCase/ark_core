@@ -20,7 +20,7 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.0.0"
+ARG VER="1.1.0"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
@@ -86,11 +86,11 @@ WORKDIR "${BASE_DIR}"
 #
 # Create the requisite user and group
 #
-RUN groupadd --system --gid "${ACM_GID}" "${ACM_GROUP}" && \
-    groupadd --system --gid "${APP_GID}" "${APP_GROUP}" && \
-    useradd  --system --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
+RUN groupadd --gid "${ACM_GID}" "${ACM_GROUP}" && \
+    groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
     groupadd --gid "${DEV_GID}" "${DEV_GROUP}" && \
-    useradd  --uid "${DEV_UID}" --gid "${DEV_GID}" --groups "${APP_GROUP},${ACM_GROUP}" "${DEV_USER}"
+    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP},${DEV_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
+    useradd  --uid "${DEV_UID}" --gid "${DEV_GROUP}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
 
 RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
