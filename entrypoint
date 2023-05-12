@@ -51,6 +51,11 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 #
 /update-ssl
 
+#
+# In case of development mode...
+#
+/add-developer
+
 if ${POLL_CONFIG} ; then
 	START="$(date +%s)"
 	say "Starting the polling cycle"
