@@ -80,6 +80,19 @@ if [ -v CATALINA_TMPDIR ] ; then
 	[ -d "${CATALINA_TMPDIR}" ] || mkdir -p "${CATALINA_TMPDIR}" || fail "Failed to create the Tomcat temp directory [${CATALINA_TMPDIR}]"
 fi
 
+if [ ! -v NODE_ID ] ; then
+	[ -v POD_NAME ] || POD_NAME="$(hostname)"
+	POD_NAME="${POD_NAME%%.*}"
+	[[ "${POD_NAME}" =~ ^.*-([0-9]+)$ ]] || fail "The pod name [${POD_NAME}] doesn't match the pattern for a stateful pod (must end with a number)"
+	NODE_ID="${BASH_REMATCH[1]}"
+else
+	[[ "${NODE_ID}" =~ ^[1-9][0-9]*$ ]] || fail "The NODE_ID value [${NODE_ID}] is not a valid number"
+	[ ${NODE_ID} -gt 0 ] && [ ${NODE_ID} -lt 256 ] || fail "The NODE_ID value must be in the range [1..255]"
+fi
+
+# Remove al leading zeros, just in case...
+export NODE_ID="$(( 10#${NODE_ID} ))"
+
 say "Launching the main process"
 
 [ ${#} -gt 0 ] || set -- "run"
