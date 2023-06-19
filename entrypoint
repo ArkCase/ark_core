@@ -93,6 +93,17 @@ fi
 # Remove al leading zeros, just in case...
 export NODE_ID="$(( 10#${NODE_ID} ))"
 
+#
+# Apply the changes to the server.xml template
+#
+SERVER_XML="/app/tomcat/conf/server.xml.tpl"
+if [ -f "${SERVER_XML}" ] ; then
+	TARGET="${SERVER_XML//.tpl/}"
+	say "Editing [${TARGET}] to remove the redundant cluster member"
+	XPATH="//Cluster/Channel/Interceptor/Member[@className = 'org.apache.catalina.tribes.membership.StaticMember' and starts-with(@host, '$(hostname).')]"
+	/usr/bin/xmlstarlet ed -P -L -d "${XPATH}" "${TEMPLATE}" "${SERVER_XML}" > "${TARGET}"
+fi
+
 MAX_BOOT_DELAY="60"
 if [ -v BOOT_DELAY ] && [[ "${BOOT_DELAY}" =~ ^[0-9]+$ ]] ; then
 	BOOT_DELAY="$(( 10#${BOOT_DELAY} ))"

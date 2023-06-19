@@ -20,7 +20,7 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.3.3"
+ARG VER="1.3.4"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
@@ -143,6 +143,7 @@ RUN yum -y update && \
         tesseract-osd \
         unzip \
         wget \
+        xmlstarlet \
         yarn \
         zip \
     && \
