@@ -101,7 +101,7 @@ if [ -f "${SERVER_XML}" ] ; then
 	TARGET="${SERVER_XML//.tpl/}"
 	say "Editing [${TARGET}] to remove the redundant cluster member"
 	XPATH="//Cluster/Channel/Interceptor/Member[@className = 'org.apache.catalina.tribes.membership.StaticMember' and starts-with(@host, '$(hostname).')]"
-	/usr/bin/xmlstarlet ed -P -L -d "${XPATH}" "${TEMPLATE}" "${SERVER_XML}" > "${TARGET}"
+	/usr/bin/xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
 fi
 
 MAX_BOOT_DELAY="60"
