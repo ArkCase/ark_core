@@ -20,7 +20,8 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.3.4"
+ARG VER="1.3.5"
+ARG BLD="01"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
@@ -96,7 +97,7 @@ ARG RESOURCE_PATH="artifacts"
 ARG YARN_SRC
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
-ARG WEBAPP_DIR="${TOMCAT_HOME}/webapps/arkcase"
+ARG WEBAPPS_DIR="${TOMCAT_HOME}/webapps"
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -105,7 +106,7 @@ ENV LANG=en_US.UTF-8 \
 #################
 # Build Arkcase
 #################
-ENV WEBAPP_DIR="${WEBAPP_DIR}" \
+ENV WEBAPPS_DIR="${WEBAPPS_DIR}" \
     NODE_ENV="production" \
     PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
     TEMP="${TEMP_DIR}" \
@@ -167,7 +168,7 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
 
     # Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
-    mkdir -vp "${WEBAPP_DIR}" && \
+    mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
@@ -205,6 +206,6 @@ EXPOSE 8080
 # These may have to disappear in openshift
 VOLUME [ "${HOME_DIR}" ]
 VOLUME [ "${LOGS_DIR}" ]
-VOLUME [ "${WEBAPP_DIR}" ]
+VOLUME [ "${WEBAPPS_DIR}" ]
 
 ENTRYPOINT [ "/entrypoint" ]
