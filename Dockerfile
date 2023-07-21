@@ -20,12 +20,14 @@ ARG BASE_REPO="arkcase/base"
 ARG BASE_TAG="8.7.0"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.3.5"
+ARG VER="1.4.0"
 ARG BLD="01"
 ARG TOMCAT_VER="9.0.50"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
+ARG CW_VER="1.4.4"
+ARG CW_SRC="https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/curator-wrapper/${CW_VER}/curator-wrapper-${CW_VER}-exe.jar"
 
 FROM "${PUBLIC_REGISTRY}/${BASE_REPO}:${BASE_TAG}"
 
@@ -37,6 +39,7 @@ ARG OS
 ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
+ARG CW_SRC
 ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
@@ -193,6 +196,8 @@ COPY --chown=root:root add-developer /
 COPY --chown=root:root 01-add-developer /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/01-add-developer && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-add-developer
+
+RUN curl -L -o "/usr/local/bin/curator-wrapper.jar" "${CW_SRC}"
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
