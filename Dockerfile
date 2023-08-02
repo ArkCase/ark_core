@@ -145,6 +145,7 @@ RUN yum -y update && \
         sudo \
         tesseract \
         tesseract-osd \
+        tzdata-java \
         unzip \
         wget \
         xmlstarlet \
