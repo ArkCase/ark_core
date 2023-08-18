@@ -17,12 +17,12 @@
 #
 ARG PUBLIC_REGISTRY="public.ecr.aws"
 ARG BASE_REPO="arkcase/base"
-ARG BASE_TAG="8.7.0"
+ARG BASE_TAG="8.8-01"
 ARG ARCH="amd64"
 ARG OS="linux"
-ARG VER="1.4.0"
+ARG VER="2.0.0"
 ARG BLD="01"
-ARG TOMCAT_VER="9.0.50"
+ARG TOMCAT_VER="9.0.79"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
@@ -44,8 +44,6 @@ ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
 ARG APP_GROUP="${APP_USER}"
-ARG ACM_GID="10000"
-ARG ACM_GROUP="acm"
 ARG BASE_DIR="/app"
 ARG HOME_DIR="${BASE_DIR}/home"
 ARG TEMP_DIR="${HOME_DIR}/temp"
@@ -66,7 +64,6 @@ ENV APP_UID="${APP_UID}" \
     APP_USER="${APP_USER}" \
     APP_GID="${APP_GID}" \
     APP_GROUP="${APP_GROUP}" \
-    ACM_GROUP="${ACM_GROUP}" \
     JAVA_HOME="/usr/lib/jvm/java" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
@@ -83,8 +80,7 @@ WORKDIR "${BASE_DIR}"
 #
 # Create the requisite user and group
 #
-RUN groupadd --gid "${ACM_GID}" "${ACM_GROUP}" && \
-    groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
+RUN groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
     useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
 RUN rm -rf /tmp/* && \
@@ -187,12 +183,7 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 
 ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 
-COPY --chown=root:root update-ssl /
-COPY --chown=root:root 00-update-ssl /etc/sudoers.d
-RUN chmod 0640 /etc/sudoers.d/00-update-ssl && \
-    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/00-update-ssl 
-
-COPY --chown=root:root add-developer /
+COPY --chown=root:root add-developer /usr/local/bin/
 COPY --chown=root:root 01-add-developer /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/01-add-developer && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-add-developer
@@ -205,8 +196,6 @@ RUN mkdir -p \
         "${TEMP_DIR}" \
         "${WORK_DIR}" \
         "${CATALINA_TMPDIR}"
-
-EXPOSE 8080
 
 # These may have to disappear in openshift
 VOLUME [ "${HOME_DIR}" ]

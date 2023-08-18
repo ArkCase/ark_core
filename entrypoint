@@ -49,12 +49,12 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 #
 # Update the SSL certificate trusts
 #
-/update-ssl
+/usr/local/bin/update-ssl
 
 #
 # In case of development mode...
 #
-/add-developer
+/usr/local/bin/add-developer
 
 if ${POLL_CONFIG} ; then
 	START="$(date +%s)"
