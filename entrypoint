@@ -49,7 +49,9 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 #
 # Update the SSL certificate trusts
 #
-/usr/local/bin/update-ssl
+
+export ACME_SUPPORT_TOMCAT="true"
+/usr/local/bin/acme-init
 
 #
 # In case of development mode...
