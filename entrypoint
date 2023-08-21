@@ -12,7 +12,7 @@ fail() {
 
 ping_server() {
 	local URL="${1}"
-	/usr/bin/curl -m 5 "${URL}/actuator/health" &>/dev/null
+	/usr/bin/curl -L --fail -m 5 "${URL}/actuator/health" &>/dev/null
 }
 
 to_boolean() {
@@ -25,7 +25,7 @@ to_boolean() {
 }
 
 DEFAULT_WAIT=90
-DEFAULT_URL="http://localhost:9999"
+DEFAULT_URL="https://localhost:9999"
 
 [ -v DEVELOPMENT ] || DEVELOPMENT="false"
 # Sanitize to ensure proper value is consumed below
