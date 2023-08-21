@@ -119,10 +119,8 @@ COPY "${RESOURCE_PATH}/server.xml" \
 ADD "${YARN_SRC}" "/etc/yum.repos.d/"
 ADD "${TOMCAT_SRC}" "${BASE_DIR}"
 
-#  \
-RUN yum -y update && \
-    # Nodejs prerequisites to install native-addons from npm
-    yum -y install \
+# Nodejs prerequisites to install native-addons from npm
+RUN yum -y install \
         epel-release && \
     yum -y install \
         apr-devel \
