@@ -50,7 +50,7 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 # Update the SSL certificate trusts
 #
 
-export ACME_SUPPORT_TOMCAT="true"
+[ -v SSL_DIR ] || SSL_DIR="/.ssl"
 /usr/local/bin/acme-init
 
 #
@@ -122,6 +122,8 @@ if [ -v BOOT_DELAY ] && [[ "${BOOT_DELAY}" =~ ^[0-9]+$ ]] ; then
 fi
 
 say "Launching the main process"
+[ -v CATALINA_OPTS ] || CATALINA_OPTS=""
+CATALINA_OPTS+=" -Dportal.keystoreFilename=${SSL_DIR}/keystore.pkcs12 -Dportal.keystorePassword=$(<"${SSL_DIR}/keystore.pass")"
 
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="/app/tomcat/bin/catalina.sh"
