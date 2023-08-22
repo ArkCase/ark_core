@@ -127,9 +127,11 @@ say "Launching the main process"
 [ -v ENV_FILE ] || ENV_FILE="/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
 
+# TODO: Re-enable this when we're on Java 11, Java 8 seems to SIGSEGV
+# when this is properly set
 # Make sure the library path includes the tomcat dir
-[ -v LD_LIBRARY_PATH ] || LD_LIBRARY_PATH=""
-LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+# [ -v LD_LIBRARY_PATH ] || LD_LIBRARY_PATH=""
+# LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
 
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="${TOMCAT_HOME}/bin/catalina.sh"

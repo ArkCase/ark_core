@@ -167,8 +167,9 @@ RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOM
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
-ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}" \
-    CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
+# TODO: Re-enable this when on Java 11 ... Java 8 is SIGSEGV
+# ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
 RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
