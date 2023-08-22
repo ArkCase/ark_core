@@ -123,9 +123,6 @@ fi
 
 say "Launching the main process"
 
-[ -v JAVA_TOOL_OPTIONS ] || JAVA_TOOL_OPTIONS=""
-JAVA_TOOL_OPTIONS+=" -Djavax.net.ssl.keyStore=${SSL_DIR}/keystore.pkcs12 -Djavax.net.ssl.keyStoreType=PKCS12 -Djavax.net.ssl.keyStorePassword=$(<"${SSL_DIR}/keystore.pass")"
-
 # Add the ability to modify the environment
 [ -v ENV_FILE ] || ENV_FILE="/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
