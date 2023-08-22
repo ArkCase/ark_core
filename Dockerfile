@@ -117,7 +117,6 @@ COPY "${RESOURCE_PATH}/server.xml" \
 
 # ADD yarn repo and nodejs package
 ADD "${YARN_SRC}" "/etc/yum.repos.d/"
-ADD "${TOMCAT_SRC}" "${BASE_DIR}"
 
 # Nodejs prerequisites to install native-addons from npm
 RUN yum -y install \
@@ -147,9 +146,8 @@ RUN yum -y install \
     && \
     yum -y clean all
 
-RUN tar -xf "apache-tomcat-${TOMCAT_VER}.tar.gz" && \
+RUN curl -K --fail "${TOMCAT_SRC}" | tar -xzvf - && \
     mv "apache-tomcat-${TOMCAT_VER}" "tomcat" && \
-    rm "apache-tomcat-${TOMCAT_VER}.tar.gz" && \
     # Removal of default/unwanted Applications
     rm -rf "${TOMCAT_HOME}/webapps"/* "${TOMCAT_HOME}/temp"/* "${TOMCAT_HOME}/bin"/*.bat
 
@@ -157,7 +155,7 @@ RUN tar -xf "apache-tomcat-${TOMCAT_VER}.tar.gz" && \
 RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
     tar -C "${TOMCAT_HOME}/bin/native" -xzvf "${TOMCAT_HOME}/bin/tomcat-native.tar.gz" --strip-components=1 && \
     pushd "${TOMCAT_HOME}/bin/native/native" && \
-    ./configure --with-apr="/usr/bin/apr-1-config" --with-java-home="${JAVA_HOME}" --with-ssl=yes --prefix="${TOMCAT_HOME}" && \
+    ./configure --prefix="${TOMCAT_HOME}" && \
     make && \
     make install && \
     popd && \
@@ -169,7 +167,7 @@ RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOM
     chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
     chmod u+x "${TOMCAT_HOME}/bin"/*.sh
 
-ENV LD_LIBRARY_PATH="${TOMCAT_HOME}:${LD_LIBRARY_PATH}" \
+ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}" \
     CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
