@@ -1,0 +1,2 @@
+#!/bin/bash
+exec curl -L --fail --connect-timeout 5 -o /dev/null https://localhost:8443/arkcase
