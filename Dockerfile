@@ -17,11 +17,11 @@
 #
 ARG PUBLIC_REGISTRY="public.ecr.aws"
 ARG BASE_REPO="arkcase/base"
-ARG BASE_TAG="8.8-01"
+ARG BASE_TAG="8.8-02"
 ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="2.0.0"
-ARG BLD="01"
+ARG BLD="02"
 ARG TOMCAT_VER="9.0.79"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
