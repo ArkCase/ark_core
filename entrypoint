@@ -2,7 +2,7 @@
 set -euo pipefail
 
 say() {
-	echo -e "$(date -u -Isec): ${@}"
+	echo -e "$(date -u -Ins): ${@}"
 }
 
 fail() {
@@ -45,6 +45,6 @@ ${DEVELOPMENT} || exec "${CMD[@]}"
 # If development mode is active, we have to resort to some trickery
 say "ID prior to development mode: $(id)"
 exec /usr/bin/newgrp developer <<-EOF
-	echo "ID changed for development mode: $(id)"
-	exec "${CMD[@]@Q}"
+	echo "$(date -u -Ins): ID changed for development mode: $(id)"
+	exec ${CMD[@]@Q}
 EOF
