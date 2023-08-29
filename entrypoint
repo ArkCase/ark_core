@@ -135,5 +135,15 @@ say "Launching the main process"
 
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="${TOMCAT_HOME}/bin/catalina.sh"
-say "Launching as: ${CATALINA} ${@@Q}"
-exec "${CATALINA}" "${@}"
+CMD=("${CATALINA}" "${@}")
+say "Launching as: ${CMD[@]@Q}"
+
+# If development mode is not active, just launch!
+${DEVELOPMENT} || exec "${CMD[@]}"
+
+# If development mode is active, we have to resort to some trickery
+say "ID prior to development mode: $(id)"
+exec /usr/bin/newgrp developer <<-EOF
+	echo "ID changed for development mode: $(id)"
+	exec "${CMD[@]@Q}"
+EOF
