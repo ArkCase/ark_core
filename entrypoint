@@ -43,8 +43,8 @@ say "Launching as: ${CMD[@]@Q}"
 ${DEVELOPMENT} || exec "${CMD[@]}"
 
 # If development mode is active, we have to resort to some trickery
-say "ID prior to development mode: $(id)"
+say "ID before development mode: $(id)"
 exec /usr/bin/newgrp developer <<-EOF
-	echo "$(date -u -Ins): ID changed for development mode: $(id)"
+	eval 'echo "\$(date -u -Ins): ID within development mode: \$(id)"'
 	exec ${CMD[@]@Q}
 EOF

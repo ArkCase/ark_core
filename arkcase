@@ -24,6 +24,23 @@ to_boolean() {
 	return 0
 }
 
+sanitize_pathspec() {
+	local LP="${1}"
+	local SEP="${2:-:}"
+	local L="$(tr "${SEP}" '\n' <<< "${LP}" | sort -u | sed -e '/^\s*$/d')"
+	local A=()
+	IFS=":" read -a A <<< "${LP}" || true
+	local FIRST="true"
+	for n in "${A[@]}" ; do
+		grep -q "^${n}$" <<< "${L}" || continue
+		[ -n "${n}" ] || continue
+		${FIRST} || echo -n "${SEP}"
+		echo -n "${n}"
+		L="$(grep -v "^${n}$" <<< "${L}")"
+		FIRST="false"
+	done
+}
+
 DEFAULT_WAIT=90
 DEFAULT_URL="https://localhost:9999"
 
@@ -111,11 +128,17 @@ say "Launching the main process"
 [ -v ENV_FILE ] || ENV_FILE="/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
 
+[ -v LD_LIBRARY_PATH ] || LD_LIBRARY_PATH=""
+
 # TODO: Re-enable this when we're on Java 11, Java 8 seems to SIGSEGV
 # when this is properly set
 # Make sure the library path includes the tomcat dir
-# [ -v LD_LIBRARY_PATH ] || LD_LIBRARY_PATH=""
 # LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+LD_LIBRARY_PATH+=":${HOME_DIR}/.arkcase/libraries"
+
+[ -v CATALINA_OPTS ] || CATALINA_OPTS=""
+[ -z "${LD_LIBRARY_PATH}" ] || CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
+export CATALINA_OPTS
 
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="${TOMCAT_HOME}/bin/catalina.sh"
