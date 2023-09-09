@@ -22,6 +22,7 @@ ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="2.0.0"
 ARG BLD="03"
+ARG JAVA_VER="1.8.0"
 ARG TOMCAT_VER="9.0.79"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
@@ -94,6 +95,7 @@ ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
 ARG RESOURCE_PATH="artifacts"
 ARG YARN_SRC
+ARG JAVA_VER
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
 ARG WEBAPPS_DIR="${TOMCAT_HOME}/webapps"
@@ -127,7 +129,7 @@ RUN yum -y install \
         gcc-c++ \
         ImageMagick \
         ImageMagick-devel \
-        java-1.8.0-openjdk-devel \
+        java-${JAVA_VER}-openjdk-devel \
         make \
         nodejs \
         openldap-clients \
