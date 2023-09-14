@@ -122,7 +122,8 @@ ADD "${YARN_SRC}" "/etc/yum.repos.d/"
 
 # Nodejs prerequisites to install native-addons from npm
 RUN yum -y install \
-        epel-release && \
+        epel-release \
+      && \
     yum -y install \
         apr-devel \
         gcc \
@@ -145,7 +146,7 @@ RUN yum -y install \
         xmlstarlet \
         yarn \
         zip \
-    && \
+      && \
     yum -y clean all
 
 RUN curl -K --fail "${TOMCAT_SRC}" | tar -xzvf - && \
