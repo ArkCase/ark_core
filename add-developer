@@ -2,7 +2,7 @@
 set -euo pipefail
 
 say() {
-	echo -e "$(date -u -Isec): ${@}"
+	echo -e "$(date -u -Ins): ${@}"
 }
 
 fail() {
@@ -27,7 +27,7 @@ is_id_assigned() {
 get_name() {
 	local DB="${1}"
 	local ID="${2}"
-	IFS=":" read NAME REST < <(getent "${DB}" "${ID}")
+	IFS=":" read NAME REST < <(/usr/bin/getent "${DB}" "${ID}")
 	echo "${NAME}"
 }
 
@@ -49,7 +49,7 @@ get_group_name() {
 	get_name "group" "${1}"
 }
 
-[ "$(id -u)" -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "${0}" "${@}"
+[ "$(/usr/bin/id -u)" -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "${0}" "${@}"
 
 [ -v DEVELOPMENT ] || DEVELOPMENT="false"
 DEVELOPMENT="$(to_boolean "${DEVELOPMENT}")"
@@ -70,7 +70,7 @@ if is_gid_assigned "${DEV_GID}" ; then
 	say "Using the existing development group named [${DEV_GROUP}] (id=${DEV_GID})"
 else
 	say "Creating a new development group named [${DEV_GROUP}] (id=${DEV_GID})"
-	groupadd --gid "${DEV_GID}" "${DEV_GROUP}"
+	/usr/sbin/groupadd --gid "${DEV_GID}" "${DEV_GROUP}"
 fi
 
 [ -v DEV_UID ] || DEV_UID="1000"
@@ -81,18 +81,18 @@ if is_uid_assigned "${DEV_UID}" ; then
 	say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID})"
 else
 	say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID})"
-	useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
+	/usr/sbin/useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
 fi
 
 for n in "${APP_USER}" "${DEV_USER}" ; do
 	say "Adding the user ${n} to groups ${DEV_GROUP}, ${ACM_GROUP}, and ${APP_GROUP}"
-	usermod --append --groups "${DEV_GROUP},${ACM_GROUP},${APP_GROUP}" "${n}"
+	/usr/sbin/usermod --append --groups "${DEV_GROUP},${ACM_GROUP},${APP_GROUP}" "${n}"
 done
 
 say "----------"
-say "Application user = $(id "${APP_USER}")"
+say "Application user  = $(id "${APP_USER}")"
 say "Application group = ${APP_GROUP}"
 say "----------"
-say "Development user = $(id "${DEV_USER}")"
+say "Development user  = $(id "${DEV_USER}")"
 say "Development group = ${DEV_GROUP}"
 say "----------"
