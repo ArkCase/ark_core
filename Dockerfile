@@ -85,8 +85,8 @@ RUN groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
     useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
 
 RUN rm -rf /tmp/* && \
-    chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
-    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" 
+    chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
+    chmod -R "ug=rwX,o=" "${BASE_DIR}"
 
 ##################################################### ARKCASE: BELOW ###############################################################
 
@@ -167,8 +167,8 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
     # Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
     mkdir -vp "${WEBAPPS_DIR}" && \
-    chown -R "${APP_USER}:${APP_GROUP}" "${BASE_DIR}" && \
-    chmod u+x "${TOMCAT_HOME}/bin"/*.sh
+    chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
+    chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
 # TODO: Re-enable this when on Java 11 ... Java 8 is SIGSEGV
 # ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
@@ -181,7 +181,7 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 
 ##################################################### ARKCASE: ABOVE ###############################################################
 
-ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
+ADD --chown="${APP_USER}:${ACM_GROUP}" "entrypoint" "/entrypoint"
 
 COPY --chown=root:root add-developer arkcase check-ready /usr/local/bin/
 COPY --chown=root:root 01-developer-mode /etc/sudoers.d
