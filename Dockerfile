@@ -184,9 +184,9 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 ADD --chown="${APP_USER}:${APP_GROUP}" "entrypoint" "/entrypoint"
 
 COPY --chown=root:root add-developer arkcase check-ready /usr/local/bin/
-COPY --chown=root:root 01-add-developer /etc/sudoers.d
-RUN chmod 0640 /etc/sudoers.d/01-add-developer && \
-    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-add-developer
+COPY --chown=root:root 01-developer-mode /etc/sudoers.d
+RUN chmod 0640 /etc/sudoers.d/01-developer-mode && \
+    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
 
 RUN curl -L -o "/usr/local/bin/curator-wrapper.jar" "${CW_SRC}"
 
