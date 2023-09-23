@@ -1,1 +1,1 @@
-%${ACM_GROUP}	ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/local/bin/add-developer
+%${ACM_GROUP}	ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/local/bin/run-developer
