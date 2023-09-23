@@ -73,7 +73,7 @@ fi
 if "${CHANGE_UID}" ; then
 
 	# First things first: ALWAYS escalate privileges if necessary as our first step
-	[ ${CUR_UID} -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "${0}" "${@}"
+	[ ${CUR_UID} -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "PATH=${PATH}" "${0}" "${@}"
 
 	[ -v DEV_GROUP ] || DEV_GROUP="${DEV_USER}"
 	[ -v DEV_GID ] || DEV_GID="1000"
