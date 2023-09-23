@@ -2,7 +2,7 @@
 set -euo pipefail
 
 say() {
-	echo -e "$(date -u -Ins): ${@}"
+	echo -e "$(/usr/bin/date -u -Ins): ${@}"
 }
 
 fail() {
@@ -41,6 +41,8 @@ sanitize_pathspec() {
 	done
 }
 
+say "Running ArkCase as: $(/usr/bin/id)"
+
 DEFAULT_WAIT=90
 DEFAULT_URL="https://localhost:9999"
 
@@ -58,6 +60,13 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 
 [ -v BASE_DIR ] || BASE_DIR="/app"
 [ -v INIT_DIR ] || INIT_DIR="${BASE_DIR}/init"
+
+
+#
+# Update the SSL certificate trusts
+#
+[ -v SSL_DIR ] || SSL_DIR="/.ssl"
+/usr/local/bin/acme-init
 
 if ${POLL_CONFIG} ; then
 	START="$(date +%s)"

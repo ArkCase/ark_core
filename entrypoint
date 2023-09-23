@@ -2,7 +2,7 @@
 set -euo pipefail
 
 say() {
-	echo -e "$(date -u -Ins): ${@}"
+	echo -e "$(/usr/bin/date -u -Ins): ${@}"
 }
 
 fail() {
@@ -10,41 +10,8 @@ fail() {
 	exit ${EXIT_CODE:-1}
 }
 
-to_boolean() {
-	local RESULT="false"
-	case "${1,,}" in
-		true | t | yes | y | 1 | on | enable | enabled | active ) RESULT="true" ;;
-	esac
-	echo "${RESULT}"
-	return 0
-}
-
-[ -v DEVELOPMENT ] || DEVELOPMENT="false"
-# Sanitize to ensure proper value is consumed below
-DEVELOPMENT="$(to_boolean "${DEVELOPMENT}")"
-
-#
-# Update the SSL certificate trusts
-#
-[ -v SSL_DIR ] || SSL_DIR="/.ssl"
-acme-init
-
-#
-# In case of development mode...
-#
-add-developer
-
 ARKCASE="$(type -P arkcase)" || fail "The arkcase executable could not be found in the path"
 
-CMD=("${ARKCASE}" "${@}")
-say "Launching as: ${CMD[@]@Q}"
-
-# If development mode is not active, just launch!
-${DEVELOPMENT} || exec "${CMD[@]}"
-
-# If development mode is active, we have to resort to some trickery
-say "ID before development mode: $(id)"
-exec /usr/bin/newgrp developer <<-EOF
-	eval 'echo "\$(date -u -Ins): ID within development mode: \$(id)"'
-	exec ${CMD[@]@Q}
-EOF
+# We use a wrapper script that *should* do the right thing with
+# respect to user IDs, groupIds, etc
+exec "/usr/local/bin/run-developer" "${ARKCASE}" "${@}"
