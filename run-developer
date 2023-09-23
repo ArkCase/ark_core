@@ -103,7 +103,7 @@ if "${CHANGE_UID}" ; then
 
 	# We need to change our ID regardless ...
 	say "Development mode is active, will run as: $(/usr/bin/id "${DEV_USER}")"
-	CMD=(/usr/bin/su --preserve-environment "${DEV_USER}" -c "${CMD[@]}")
+	CMD=(/usr/bin/sudo --non-interactive --preserve-env -u "${DEV_USER}" "PATH=${PATH}" "${CMD[@]}")
 fi
 
 # Do the actual deed ...
