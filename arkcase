@@ -64,6 +64,7 @@ POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
 
 # This seems to be necessary in order for the AngularResourceCopier to not puke out
 cd "${HOME_DIR}" || fail "Failed to CD into the home directory [${HOME_DIR}]"
+export HOME="${HOME_DIR}"
 
 #
 # Update the SSL certificate trusts
