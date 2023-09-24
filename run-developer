@@ -45,8 +45,24 @@ is_gid_assigned() {
 	return ${?}
 }
 
+is_in_group() {
+	local USER="${1}"
+	shift
+}
+
 get_group_name() {
 	get_name "group" "${1}"
+}
+
+get_missing_groups() {
+	local USER="${1}"
+	shift
+	local CURRENT_GROUPS="$(/usr/bin/id -nG "${USER}" | /usr/bin/tr '[[:space:]]' '\n' | /usr/bin/sort -u)"
+	local MISSING=()
+	for n in "${@}" ; do
+		/usr/bin/egrep -q "^${n}$" <<< "${CURRENT_GROUPS}" || MISSING+=("${n}")
+	done
+	echo -n "${MISSING[@]}"
 }
 
 # This is the command that we will turn into at the end ...
@@ -97,8 +113,11 @@ if "${CHANGE_UID}" ; then
 	fi
 
 	for n in "${APP_USER}" "${DEV_USER}" ; do
-		say "Adding the user ${n} to groups ${DEV_GROUP}, ${ACM_GROUP}, and ${APP_GROUP}"
-		/usr/sbin/usermod --append --groups "${DEV_GROUP},${ACM_GROUP},${APP_GROUP}" "${n}"
+		MISSING_GROUPS=($(get_missing_groups "${n}" "${DEV_GROUP}" "${ACM_GROUP}" "${APP_GROUP}"))
+		if [ ${#MISSING_GROUPS[@]} -gt 0 ] ; then
+			say "Adding the user ${n} to groups [${MISSING_GROUPS[@]}]"
+			/usr/sbin/usermod --append --groups "$(IFS="," ; echo "${MISSING_GROUPS[*]}")" "${n}"
+		fi
 	done
 
 	# We need to change our ID regardless ...
