@@ -16,12 +16,9 @@
 # Basic Parameters
 #
 ARG PUBLIC_REGISTRY="public.ecr.aws"
-ARG BASE_REPO="arkcase/base"
-ARG BASE_TAG="8-02"
 ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="3.0.0"
-ARG BLD="01"
 ARG JAVA_VER="11"
 ARG TOMCAT_VER="9.0.82"
 ARG TOMCAT_MAJOR_VER="9"
@@ -30,7 +27,11 @@ ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
 ARG CW_VER="1.4.4"
 ARG CW_SRC="https://project.armedia.com/nexus/repository/arkcase/com/armedia/acm/curator-wrapper/${CW_VER}/curator-wrapper-${CW_VER}-exe.jar"
 
-FROM "${PUBLIC_REGISTRY}/${BASE_REPO}:${BASE_TAG}"
+ARG BASE_REPO="arkcase/base"
+ARG BASE_VER="8"
+ARG BASE_IMG="${PUBLIC_REGISTRY}/${BASE_REPO}:${BASE_VER}"
+
+FROM "${BASE_IMG}"
 
 #
 # Basic Parameters
