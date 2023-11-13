@@ -172,8 +172,7 @@ RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOM
     chmod -R "ug=rwX,o=" "${TOMCAT_HOME}" && \
     chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
-# TODO: Re-enable this when on Java 11 ... Java 8 is SIGSEGV
-# ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
 ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
