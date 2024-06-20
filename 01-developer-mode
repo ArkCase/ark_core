@@ -1,1 +1,3 @@
 %${ACM_GROUP}	ALL=(ALL:ALL) NOPASSWD:SETENV: /usr/local/bin/run-developer
+
+Defaults    env_delete -= "JAVA_TOOL_OPTIONS"
