@@ -1,60 +1,81 @@
 #!/bin/bash
 set -euo pipefail
 
-say() {
-	echo -e "$(/usr/bin/date -u -Ins): ${@}"
+timestamp()
+{
+	/usr/bin/date -Ins -u
 }
 
-fail() {
-	say "${@}" 1>&2
+say()
+{
+	echo -e "$(timestamp): ${@}"
+}
+
+err()
+{
+	say "❌ ${@}"
+}
+
+fail()
+{
+	err "${@}"
 	exit ${EXIT_CODE:-1}
 }
 
-to_boolean() {
+to_boolean()
+{
 	case "${1,,}" in
 		true | t | 1 | yes | on | enabled | enable ) echo "true" ;;
 		* ) echo "false" ;;
 	esac
 }
 
-is_id_assigned() {
+is_id_assigned()
+{
 	local DB="${1}"
 	local ID="${2}"
 	/usr/bin/getent "${DB}" | awk -F ':' '{ print $3 }' | sort -nu | grep -q "^${ID}$" && return 0
 	return 1
 }
 
-get_name() {
+get_name()
+{
 	local DB="${1}"
 	local ID="${2}"
 	IFS=":" read NAME REST < <(/usr/bin/getent "${DB}" "${ID}")
 	echo "${NAME}"
 }
 
-is_uid_assigned() {
+is_uid_assigned()
+{
 	is_id_assigned "passwd" "${1}"
 	return ${?}
 }
 
-get_user_name() {
+get_user_name()
+{
 	get_name "passwd" "${1}"
 }
 
-is_gid_assigned() {
+is_gid_assigned()
+{
 	is_id_assigned "group" "${1}"
 	return ${?}
 }
 
-is_in_group() {
+is_in_group()
+{
 	local USER="${1}"
 	shift
 }
 
-get_group_name() {
+get_group_name()
+{
 	get_name "group" "${1}"
 }
 
-get_missing_groups() {
+get_missing_groups()
+{
 	local USER="${1}"
 	shift
 	local CURRENT_GROUPS="$(/usr/bin/id -nG "${USER}" | /usr/bin/tr '[[:space:]]' '\n' | /usr/bin/sort -u)"
@@ -81,19 +102,19 @@ if $(to_boolean "${DEVELOPMENT:-"false"}") ; then
 	[ -v DEV_UID ] || DEV_UID="1000"
 	[[ "${DEV_UID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_UID ${DEV_UID} is not a valid number"
 
+	[ -v DEV_GROUP ] || DEV_GROUP="${DEV_USER}"
+	[ -v DEV_GID ] || DEV_GID="1000"
+	[[ "${DEV_GID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_GID ${DEV_GID} is not a valid number"
+
 	# If the current user ID is not the same as DEV_UID, we have work to do!
 	[ ${CUR_UID} != ${DEV_UID} ] && CHANGE_UID="true"
 fi
 
 # So we only work our magic if/when necessary
-if "${CHANGE_UID}" ; then
+if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 
 	# First things first: ALWAYS escalate privileges if necessary as our first step
 	[ ${CUR_UID} -eq 0 ] || exec /usr/bin/sudo --non-interactive --preserve-env "PATH=${PATH}" "${0}" "${@}"
-
-	[ -v DEV_GROUP ] || DEV_GROUP="${DEV_USER}"
-	[ -v DEV_GID ] || DEV_GID="1000"
-	[[ "${DEV_GID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_GID ${DEV_GID} is not a valid number"
 
 	# We have to do the group first, b/c it's used when creating the user...
 	if is_gid_assigned "${DEV_GID}" ; then
