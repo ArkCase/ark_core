@@ -92,9 +92,9 @@ CMD=("${@}")
 # Get the ID for the current user or the sudo user, as appropriate
 CUR_UID="$(/usr/bin/id -u)" || fail "Failed to compute the current user's ID"
 
-[ -v ACM_USER_HOME ] || ACM_USER_HOME=""
-[ -n "${ACM_USER_HOME}" ] || ACM_USER_HOME="$(eval echo ~${USER})"
-export ACM_USER_HOME
+[ -v APP_USER_HOME ] || APP_USER_HOME=""
+[ -n "${APP_USER_HOME}" ] || APP_USER_HOME="$(eval echo ~${APP_USER})"
+export APP_USER_HOME
 
 # If we're in development mode, we need to check if we have to swap
 # UIDs using superuser magic ... if there's no swap needed, then we
@@ -133,8 +133,8 @@ if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 		DEV_USER="$(get_user_name "${DEV_UID}")"
 		say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID})"
 	else
-		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID}), home = [${ACM_USER_HOME}]"
-		/usr/sbin/useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --home-dir "${ACM_USER_HOME}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
+		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID}), home = [${APP_USER_HOME}]"
+		/usr/sbin/useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --home-dir "${APP_USER_HOME}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
 	fi
 
 	for n in "${APP_USER}" "${DEV_USER}" ; do
