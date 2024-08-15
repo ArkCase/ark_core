@@ -184,7 +184,7 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 
 ADD --chown="${APP_USER}:${ACM_GROUP}" "entrypoint" "/entrypoint"
 
-COPY --chown=root:root run-developer arkcase check-ready /usr/local/bin/
+COPY --chown=root:root become-developer run-developer arkcase check-ready /usr/local/bin/
 COPY --chown=root:root 01-developer-mode /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/01-developer-mode && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
