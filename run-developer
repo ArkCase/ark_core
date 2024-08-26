@@ -1,34 +1,7 @@
 #!/bin/bash
+
 set -euo pipefail
-
-timestamp()
-{
-	/usr/bin/date -Ins -u
-}
-
-say()
-{
-	echo -e "$(timestamp): ${@}"
-}
-
-err()
-{
-	say "❌ ${@}"
-}
-
-fail()
-{
-	err "${@}"
-	exit ${EXIT_CODE:-1}
-}
-
-to_boolean()
-{
-	case "${1,,}" in
-		true | t | 1 | yes | on | enabled | enable ) echo "true" ;;
-		* ) echo "false" ;;
-	esac
-}
+. /.functions
 
 is_id_assigned()
 {
@@ -92,8 +65,8 @@ CMD=("${@}")
 # Get the ID for the current user or the sudo user, as appropriate
 CUR_UID="$(/usr/bin/id -u)" || fail "Failed to compute the current user's ID"
 
-[ -v APP_USER_HOME ] || APP_USER_HOME=""
-[ -n "${APP_USER_HOME}" ] || APP_USER_HOME="$(eval echo ~${APP_USER})"
+ 
+set_or_default APP_USER_HOME "$(eval echo ~${APP_USER})"
 export APP_USER_HOME
 
 # If we're in development mode, we need to check if we have to swap
@@ -102,12 +75,12 @@ export APP_USER_HOME
 CHANGE_UID="false"
 if $(to_boolean "${DEVELOPMENT:-"false"}") ; then
 
-	[ -v DEV_USER ] || DEV_USER="developer"
-	[ -v DEV_UID ] || DEV_UID="1000"
+	set_or_default DEV_USER "developer"
+	set_or_default DEV_UID "1000"
 	[[ "${DEV_UID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_UID ${DEV_UID} is not a valid number"
 
-	[ -v DEV_GROUP ] || DEV_GROUP="${DEV_USER}"
-	[ -v DEV_GID ] || DEV_GID="1000"
+	set_or_default DEV_GROUP "${DEV_USER}"
+	set_or_default DEV_GID "${DEV_UID}"
 	[[ "${DEV_GID}" =~ ^[1-9][0-9]*$ ]] || fail "The DEV_GID ${DEV_GID} is not a valid number"
 
 	# If the current user ID is not the same as DEV_UID, we have work to do!
@@ -131,9 +104,9 @@ if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 
 	if is_uid_assigned "${DEV_UID}" ; then
 		DEV_USER="$(get_user_name "${DEV_UID}")"
-		say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID})"
+		say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID}, home = [${APP_USER_HOME}])"
 	else
-		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID}), home = [${APP_USER_HOME}]"
+		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID})"
 		/usr/sbin/useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --home-dir "${APP_USER_HOME}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
 	fi
 
@@ -151,5 +124,4 @@ if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 fi
 
 # Do the actual deed ...
-say "Launching: ${@@Q}"
-exec "${CMD[@]}"
+execute "${CMD[@]}"

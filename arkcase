@@ -1,66 +1,31 @@
 #!/bin/bash
+
 set -euo pipefail
+. /.functions
 
-say() {
-	echo -e "$(/usr/bin/date -u -Ins): ${@}"
-}
-
-fail() {
-	say "${@}" 1>&2
-	exit ${EXIT_CODE:-1}
-}
-
-ping_server() {
+ping_server()
+{
 	local URL="${1}"
-	/usr/bin/curl -L --fail -m 5 "${URL}/actuator/health" &>/dev/null
+	curl -L --fail -m 5 "${URL}/actuator/health" &>/dev/null
 }
 
-to_boolean() {
-	local RESULT="false"
-	case "${1,,}" in
-		true | t | yes | y | 1 | on | enable | enabled | active ) RESULT="true" ;;
-	esac
-	echo "${RESULT}"
-	return 0
-}
-
-sanitize_pathspec() {
-	local LP="${1}"
-	local SEP="${2:-:}"
-	local L="$(tr "${SEP}" '\n' <<< "${LP}" | sort -u | sed -e '/^\s*$/d')"
-	local A=()
-	IFS=":" read -a A <<< "${LP}" || true
-	local FIRST="true"
-	for n in "${A[@]}" ; do
-		grep -q "^${n}$" <<< "${L}" || continue
-		[ -n "${n}" ] || continue
-		${FIRST} || echo -n "${SEP}"
-		echo -n "${n}"
-		L="$(grep -v "^${n}$" <<< "${L}")"
-		FIRST="false"
-	done
-}
-
-say "Running ArkCase as: $(/usr/bin/id)"
+doing "Running ArkCase as: $(id)"
 
 DEFAULT_WAIT=90
 DEFAULT_URL="https://localhost:9999"
 
 # If not specifically told otherwise, wait up to
 # 90 seconds for the config server to come back up
-[ -v CONFIG_WAIT ] || CONFIG_WAIT=${DEFAULT_WAIT}
-[ -n "${CONFIG_WAIT}" ] || CONFIG_WAIT=${DEFAULT_WAIT}
+set_or_default CONFIG_WAIT "${DEFAULT_WAIT}"
 [[ ${CONFIG_WAIT} =~ ^(0|[1-9][0-9]*)$ ]] || fail "The wait period must be a number with no leading zeros [${CONFIG_WAIT}]"
 
-[ -v CONFIG_URL ] || CONFIG_URL="${DEFAULT_URL}"
-[ -n "${CONFIG_URL}" ] || fail "The config server URL must be a non-empty string [${CONFIG_URL}]"
+set_or_default CONFIG_URL "${DEFAULT_URL}"
 
-[ -v POLL_CONFIG ] || POLL_CONFIG="true"
-POLL_CONFIG="$(to_boolean "${POLL_CONFIG}")"
+set_as_boolean POLL_CONFIG "true"
 
-[ -v BASE_DIR ] || BASE_DIR="/app"
-[ -v INIT_DIR ] || INIT_DIR="${BASE_DIR}/init"
-[ -v HOME_DIR ] || HOME_DIR="${BASE_DIR}/home"
+set_or_default BASE_DIR "/app"
+set_or_default INIT_DIR "${BASE_DIR}/init"
+set_or_default HOME_DIR "${BASE_DIR}/home"
 
 # This seems to be necessary in order for the AngularResourceCopier to not puke out
 cd "${HOME_DIR}" || fail "Failed to CD into the home directory [${HOME_DIR}]"
@@ -69,32 +34,16 @@ export HOME="${HOME_DIR}"
 #
 # Update the SSL certificate trusts
 #
-[ -v SSL_DIR ] || SSL_DIR="/.ssl"
-/usr/local/bin/acme-init
+init_ssl
 
 if ${POLL_CONFIG} ; then
-	START="$(date +%s)"
-	say "Starting the polling cycle"
-	while true ; do
-		ping_server "${CONFIG_URL}" && break
-
-		say "\tConfig server is not up yet at [${CONFIG_URL}]"
-		NOW="$(date +%s)"
-		[ $(( NOW - START )) -lt ${CONFIG_WAIT} ] || fail "Timed out waiting for configserver to come up at [${CONFIG_URL}]"
-		sleep 2
-	done
-	say "Config server responded, continuing"
+	poll_url "${CONFIG_URL}" "${CONFIG_WAIT}" 2 || exit ${?}
 else
-	say "Config server polling is disabled, continuing"
+	warn "Config server polling is disabled, continuing"
 fi
 
-if [ -v WORK_DIR ] ; then
-	[ -d "${WORK_DIR}" ] || mkdir -p "${WORK_DIR}" || fail "Failed to create the Tomcat work directory [${WORK_DIR}]"
-fi
-
-if [ -v CATALINA_TMPDIR ] ; then
-	[ -d "${CATALINA_TMPDIR}" ] || mkdir -p "${CATALINA_TMPDIR}" || fail "Failed to create the Tomcat temp directory [${CATALINA_TMPDIR}]"
-fi
+ensure_dir "${WORK_DIR}"
+ensure_dir "${CATALINA_TMPDIR}"
 
 if [ ! -v NODE_ID ] ; then
 	[ -v POD_NAME ] || POD_NAME="$(hostname)"
@@ -117,7 +66,7 @@ if [ -f "${SERVER_XML}" ] ; then
 	TARGET="${SERVER_XML//.tpl/}"
 	say "Editing [${TARGET}] to remove the redundant cluster member"
 	XPATH="//Cluster/Channel/Interceptor/Member[@className = 'org.apache.catalina.tribes.membership.StaticMember' and starts-with(@host, '$(hostname).')]"
-	/usr/bin/xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
+	xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
 fi
 
 MAX_BOOT_DELAY="60"
@@ -149,12 +98,12 @@ say "Launching the main process"
 # LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
 LD_LIBRARY_PATH+=":${HOME_DIR}/.arkcase/libraries"
 
-[ -v CATALINA_OPTS ] || CATALINA_OPTS=""
+set_or_default CATALINA_OPTS
+
 [ -z "${LD_LIBRARY_PATH}" ] || CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
 export CATALINA_OPTS
 
 [ ${#} -gt 0 ] || set -- "run"
 CATALINA="${TOMCAT_HOME}/bin/catalina.sh"
 CMD=("${CATALINA}" "${@}")
-say "Launching as: ${CMD[@]@Q}"
-exec "${CMD[@]}"
+execute "${CMD[@]}"

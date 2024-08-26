@@ -1,17 +1,10 @@
 #!/bin/bash
+
 set -euo pipefail
+. /.functions
 
-say() {
-	echo -e "$(/usr/bin/date -u -Ins): ${@}"
-}
-
-fail() {
-	say "${@}" 1>&2
-	exit ${EXIT_CODE:-1}
-}
-
-ARKCASE="$(type -P arkcase)" || fail "The arkcase executable could not be found in the path"
+ensure_exe arkcase
 
 # We use a wrapper script that *should* do the right thing with
-# respect to user IDs, groupIds, etc
+# respect to user IDs, groupIds, etc.
 exec "/usr/local/bin/run-developer" "${ARKCASE}" "${@}"
