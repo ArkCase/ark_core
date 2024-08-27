@@ -72,7 +72,8 @@ set_or_default ENV_FILE "/.env"
 
 set_or_default LD_LIBRARY_PATH
 
-LD_LIBRARY_PATH+=":${TOMCAT_HOME}/lib"
+# Apparently, Tomcat is still not happy in binary mode
+# LD_LIBRARY_PATH+=":${TOMCAT_HOME}/lib"
 LD_LIBRARY_PATH+=":${HOME_DIR}/.arkcase/libraries"
 
 set_or_default CATALINA_OPTS
