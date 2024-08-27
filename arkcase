@@ -3,23 +3,17 @@
 set -euo pipefail
 . /.functions
 
-ping_server()
-{
-	local URL="${1}"
-	curl -L --fail -m 5 "${URL}/actuator/health" &>/dev/null
-}
-
 doing "Running ArkCase as: $(id)"
 
-DEFAULT_WAIT=90
-DEFAULT_URL="https://localhost:9999"
+DEFAULT_CONFIG_WAIT=90
+DEFAULT_CONFIG_URL="https://localhost:9999"
 
 # If not specifically told otherwise, wait up to
 # 90 seconds for the config server to come back up
-set_or_default CONFIG_WAIT "${DEFAULT_WAIT}"
+set_or_default CONFIG_WAIT
 [[ ${CONFIG_WAIT} =~ ^(0|[1-9][0-9]*)$ ]] || fail "The wait period must be a number with no leading zeros [${CONFIG_WAIT}]"
 
-set_or_default CONFIG_URL "${DEFAULT_URL}"
+set_or_default CONFIG_URL
 
 set_as_boolean POLL_CONFIG "true"
 
@@ -36,8 +30,9 @@ export HOME="${HOME_DIR}"
 #
 init_ssl
 
-if ${POLL_CONFIG} ; then
-	poll_url "${CONFIG_URL}" "${CONFIG_WAIT}" 2 || exit ${?}
+if "${POLL_CONFIG}" ; then
+	# We poke at a specific path that will always return a result
+	poll_url "${CONFIG_URL}/actuator/health" "${CONFIG_WAIT}" 2 || exit ${?}
 else
 	warn "Config server polling is disabled, continuing"
 fi
@@ -46,7 +41,7 @@ ensure_dir "${WORK_DIR}"
 ensure_dir "${CATALINA_TMPDIR}"
 
 if [ ! -v NODE_ID ] ; then
-	[ -v POD_NAME ] || POD_NAME="$(hostname)"
+	set_or_default POD_NAME "$(hostname)"
 	POD_NAME="${POD_NAME%%.*}"
 	[[ "${POD_NAME}" =~ ^.*-([0-9]+)$ ]] || fail "The pod name [${POD_NAME}] doesn't match the pattern for a stateful pod (must end with a number)"
 	NODE_ID="${BASH_REMATCH[1]}"
@@ -62,48 +57,27 @@ export NODE_ID="$(( 10#${NODE_ID} ))"
 # Apply the changes to the server.xml template
 #
 SERVER_XML="${TOMCAT_HOME}/conf/server.xml.tpl"
-if [ -f "${SERVER_XML}" ] ; then
+if is_file_readable "${SERVER_XML}" ; then
 	TARGET="${SERVER_XML//.tpl/}"
 	say "Editing [${TARGET}] to remove the redundant cluster member"
 	XPATH="//Cluster/Channel/Interceptor/Member[@className = 'org.apache.catalina.tribes.membership.StaticMember' and starts-with(@host, '$(hostname).')]"
 	xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
 fi
 
-MAX_BOOT_DELAY="60"
-if [ -v BOOT_DELAY ] && [[ "${BOOT_DELAY}" =~ ^[0-9]+$ ]] ; then
-	BOOT_DELAY="$(( 10#${BOOT_DELAY} ))"
-	if [ ${BOOT_DELAY} -gt 0 ] ; then
-		[ ${BOOT_DELAY} -gt ${MAX_BOOT_DELAY} ] && BOOT_DELAY=${MAX_BOOT_DELAY}
-		say "Applying a boot delay of ${BOOT_DELAY} seconds"
-		START="$(date +%s)"
-		while true ; do
-			DIFF="$(( $(date +%s) - START ))"
-			[ ${DIFF} -ge ${BOOT_DELAY} ] && break
-			sleep 1 || fail "Boot delay aborted - exiting"
-		done
-	fi
-fi
-
 say "Launching the main process"
 
 # Add the ability to modify the environment
-[ -v ENV_FILE ] || ENV_FILE="/.env"
+set_or_default ENV_FILE "/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
 
-[ -v LD_LIBRARY_PATH ] || LD_LIBRARY_PATH=""
+set_or_default LD_LIBRARY_PATH
 
-# TODO: Re-enable this when we're on Java 11, Java 8 seems to SIGSEGV
-# when this is properly set
-# Make sure the library path includes the tomcat dir
-# LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+LD_LIBRARY_PATH+=":${TOMCAT_HOME}/lib"
 LD_LIBRARY_PATH+=":${HOME_DIR}/.arkcase/libraries"
 
 set_or_default CATALINA_OPTS
-
-[ -z "${LD_LIBRARY_PATH}" ] || CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
+CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
 export CATALINA_OPTS
 
 [ ${#} -gt 0 ] || set -- "run"
-CATALINA="${TOMCAT_HOME}/bin/catalina.sh"
-CMD=("${CATALINA}" "${@}")
-execute "${CMD[@]}"
+execute "${TOMCAT_HOME}/bin/catalina.sh" "${@}"

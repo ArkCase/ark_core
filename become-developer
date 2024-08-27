@@ -1,3 +1,9 @@
 #!/bin/bash
-[ ${#} -lt 1 ] && set -- "/usr/bin/bash"
-exec sudo --non-interactive --preserve-env /usr/local/bin/run-developer "${@}"
+set -eou pipefail
+. /.functions
+
+require_exe run-developer
+
+[ ${#} -lt 1 ] && set -- "/bin/bash"
+
+exec sudo --non-interactive --preserve-env run-developer "${@}"
