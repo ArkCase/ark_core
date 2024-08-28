@@ -30,7 +30,7 @@ export HOME="${HOME_DIR}"
 #
 init_ssl
 
-if "${POLL_CONFIG}" ; then
+if as_boolean "${POLL_CONFIG}" ; then
 	# We poke at a specific path that will always return a result
 	poll_url "${CONFIG_URL}/actuator/health" "${CONFIG_WAIT}" 2 || exit ${?}
 else
