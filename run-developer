@@ -65,7 +65,7 @@ CMD=("${@}")
 # Get the ID for the current user or the sudo user, as appropriate
 CUR_UID="$(/usr/bin/id -u)" || fail "Failed to compute the current user's ID"
 
- 
+
 set_or_default APP_USER_HOME "$(eval echo ~${APP_USER})"
 export APP_USER_HOME
 
