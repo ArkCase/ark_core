@@ -104,9 +104,9 @@ if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 
 	if is_uid_assigned "${DEV_UID}" ; then
 		DEV_USER="$(get_user_name "${DEV_UID}")"
-		say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID}, home = [${APP_USER_HOME}])"
+		say "Using the existing development user named [${DEV_USER}] (id=${DEV_UID})"
 	else
-		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID})"
+		say "Creating a new development user named [${DEV_USER}] (id=${DEV_UID}, home = [${APP_USER_HOME}])"
 		/usr/sbin/useradd --uid "${DEV_UID}" --gid "${DEV_GROUP}" --home-dir "${APP_USER_HOME}" --groups "${ACM_GROUP},${APP_GROUP}" "${DEV_USER}"
 	fi
 
