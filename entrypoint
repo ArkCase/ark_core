@@ -3,8 +3,8 @@
 set -euo pipefail
 . /.functions
 
-require_exe run-developer arkcase
+require_exe run-developer /usr/local/bin/arkcase
 
 # We use a wrapper script that *should* do the right thing with
 # respect to user IDs, groupIds, etc.
-exec run-developer arkcase "${@}"
+exec run-developer /usr/local/bin/arkcase "${@}"
