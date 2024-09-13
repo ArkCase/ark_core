@@ -81,4 +81,11 @@ CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
 export CATALINA_OPTS
 
 [ ${#} -gt 0 ] || set -- "run"
-execute "${TOMCAT_HOME}/bin/catalina.sh" "${@}"
+CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
+
+# In development mode, we take a slight detour b/c we'll want to run
+# the tomcat container in a loop so we can restart it over and over
+# without crashing the pod
+as_boolean "${DEVELOPER:-false}" && CMD=( run-in-loop "${CMD[@]}" )
+
+execute "${CMD[@]}"
