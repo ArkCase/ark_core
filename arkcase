@@ -86,6 +86,6 @@ CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
 # In development mode, we take a slight detour b/c we'll want to run
 # the tomcat container in a loop so we can restart it over and over
 # without crashing the pod
-as_boolean "${DEVELOPER:-false}" && as_boolean "${DEBUG:-false}" && CMD=( run-in-loop "${CMD[@]}" )
+as_boolean "${DEVELOPMENT:-false}" && as_boolean "${DEBUG:-false}" && CMD=( run-in-loop "${CMD[@]}" )
 
 execute "${CMD[@]}"
