@@ -30,6 +30,10 @@ export HOME="${HOME_DIR}"
 #
 init_ssl
 
+# Enable reading the cert that HAProxy will need
+set_as_boolean CLUSTER_ENABLED "false"
+"${CLUSTER_ENABLED}" && chmod a+r "${SSL_DIR}/haproxy-cert.pem"
+
 if as_boolean "${POLL_CONFIG}" ; then
 	# We poke at a specific path that will always return a result
 	poll_url "${CONFIG_URL}/actuator/health" "${CONFIG_WAIT}" 2 || exit ${?}
