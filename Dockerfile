@@ -20,10 +20,9 @@ ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA_VER="11"
-ARG TOMCAT_VER="9.0.88"
+ARG TOMCAT_VER="9.0.97"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
-ARG YARN_SRC="https://dl.yarnpkg.com/rpm/yarn.repo"
 ARG CW_VER="1.5.0"
 ARG CW_SRC="https://nexus.armedia.com/repository/arkcase/com/armedia/acm/curator-wrapper/${CW_VER}/curator-wrapper-${CW_VER}-exe.jar"
 
@@ -97,7 +96,6 @@ ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
 ARG RESOURCE_PATH="artifacts"
-ARG YARN_SRC
 ARG JAVA_VER
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
@@ -120,9 +118,6 @@ COPY "${RESOURCE_PATH}/server.xml" \
      "${RESOURCE_PATH}/logging.properties" \
      "${RESOURCE_PATH}/catalina.properties" ./
 
-# ADD yarn repo and nodejs package
-ADD "${YARN_SRC}" "/etc/yum.repos.d/"
-
 # Nodejs prerequisites to install native-addons from npm
 RUN yum -y install \
         epel-release \
@@ -135,7 +130,6 @@ RUN yum -y install \
         ImageMagick-devel \
         java-${JAVA_VER}-openjdk-devel \
         make \
-        nodejs \
         openldap-clients \
         openssl \
         openssl-devel \
@@ -147,7 +141,6 @@ RUN yum -y install \
         unzip \
         wget \
         xmlstarlet \
-        yarn \
         zip \
       && \
     yum -y clean all
