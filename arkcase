@@ -68,6 +68,23 @@ if is_file_readable "${SERVER_XML}" ; then
 	xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
 fi
 
+#
+# Set the environment variables for the global artifacts checksum
+#
+SUM_FILE="${HOME_DIR}/.artifacts.global.sums"
+if is_file_readable "${SUM_FILE}" ; then
+	ARTIFACTS_GLOBAL_SUMS="$(<"${SUM_FILE}")"
+else
+	ARTIFACTS_GLOBAL_SUMS='{ "arkcase": "unknown" }'
+fi
+
+# We're only interested in the ArkCase value, for now ...
+export ARTIFACTS_GLOBAL_HASH="$(jq -r ".arkcase" <<< "${ARTIFACTS_GLOBAL_SUMS}")"
+
+# Add some extra deetz to the JSON, for tracking purposes ;)
+ARTIFACTS_GLOBAL_SUMS="$(jq --arg POD_NAME "${POD_NAME}" --arg TIMESTAMP "$(timestamp)" -r '. += { "pod": $POD_NAME, "timestamp": $TIMESTAMP }' <<< "${ARTIFACTS_GLOBAL_SUMS}")"
+export ARTIFACTS_GLOBAL_SUMS
+
 say "Launching the main process"
 
 # Add the ability to modify the environment
