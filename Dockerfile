@@ -19,15 +19,15 @@ ARG PUBLIC_REGISTRY="public.ecr.aws"
 ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="3.0.0"
-ARG JAVA_VER="11"
-ARG TOMCAT_VER="9.0.97"
+ARG JAVA="11"
+ARG TOMCAT_VER="9.0.105"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG CW_VER="1.5.0"
 ARG CW_SRC="https://nexus.armedia.com/repository/arkcase/com/armedia/acm/curator-wrapper/${CW_VER}/curator-wrapper-${CW_VER}-exe.jar"
 
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
-ARG BASE_REPO="arkcase/base"
+ARG BASE_REPO="arkcase/base-java"
 ARG BASE_VER="8"
 ARG BASE_VER_PFX=""
 ARG BASE_IMG="${BASE_REGISTRY}/${BASE_REPO}:${BASE_VER_PFX}${BASE_VER}"
@@ -67,7 +67,6 @@ ENV APP_UID="${APP_UID}" \
     APP_USER="${APP_USER}" \
     APP_GID="${APP_GID}" \
     APP_GROUP="${APP_GROUP}" \
-    JAVA_HOME="/usr/lib/jvm/java" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
     LC_ALL="en_US.UTF-8" \
@@ -96,7 +95,7 @@ ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
 ARG RESOURCE_PATH="artifacts"
-ARG JAVA_VER
+ARG JAVA
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
 ARG WEBAPPS_DIR="${TOMCAT_HOME}/webapps"
@@ -119,7 +118,8 @@ COPY "${RESOURCE_PATH}/server.xml" \
      "${RESOURCE_PATH}/catalina.properties" ./
 
 # Nodejs prerequisites to install native-addons from npm
-RUN yum -y install \
+RUN set-java "${JAVA}" && \
+    yum -y install \
         epel-release \
       && \
     yum -y install \
@@ -128,7 +128,6 @@ RUN yum -y install \
         gcc-c++ \
         ImageMagick \
         ImageMagick-devel \
-        java-${JAVA_VER}-openjdk-devel \
         make \
         openldap-clients \
         openssl \
