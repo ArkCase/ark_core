@@ -41,11 +41,10 @@ else
 	warn "Config server polling is disabled, continuing"
 fi
 
-set_or_default ALT_JAVA
-if [ -n "${ALT_JAVA}" ] ; then
-	doing "Setting the JVM to [${ALT_JAVA}]..."
-	set-java "${ALT_JAVA}"
-fi
+#
+# Set the alternate Java version, if applicable
+#
+set-java
 
 ensure_dir "${WORK_DIR}"
 ensure_dir "${CATALINA_TMPDIR}"
