@@ -1,0 +1,6 @@
+<!--
+	Restrict the Tomcat Manager to only be accessible through localhost
+-->
+<Context antiResourceLocking="false" privileged="true" docBase="${catalina.home}/manager">
+	<Valve className="org.apache.catalina.valves.RemoteAddrValve"  allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" denyStatus="404" />
+</Context>

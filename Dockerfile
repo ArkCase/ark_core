@@ -146,8 +146,17 @@ RUN set-java "${JAVA}" && \
 
 RUN curl -K --fail "${TOMCAT_SRC}" | tar -xzvf - && \
     mv "apache-tomcat-${TOMCAT_VER}" "tomcat" && \
+    # Preserve the Tomcat Manager
+    mv -vf "${TOMCAT_HOME}/webapps/manager" "${TOMCAT_HOME}/manager" && \
     # Removal of default/unwanted Applications
-    rm -rf "${TOMCAT_HOME}/webapps"/* "${TOMCAT_HOME}/temp"/* "${TOMCAT_HOME}/bin"/*.bat
+    rm -rf \
+      "${TOMCAT_HOME}/webapps"/* \
+      "${TOMCAT_HOME}/temp"/* \
+      "${TOMCAT_HOME}/bin"/*.bat
+
+COPY --chown=root:root manager-context.xml "${TOMCAT_HOME}/conf/Catalina/localhost/manager.xml"
+COPY --chown=root:root tomcat-users.xml "${TOMCAT_HOME}/conf/tomcat-users.xml"
+RUN chmod a=r "${TOMCAT_HOME}/conf/tomcat-users.xml"
 
     # Compile the native connector
 RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
