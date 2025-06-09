@@ -128,6 +128,7 @@ RUN set-java "${JAVA}" && \
         gcc-c++ \
         ImageMagick \
         ImageMagick-devel \
+        fontconfig \
         make \
         openldap-clients \
         openssl \
