@@ -97,10 +97,11 @@ set_or_default ENV_FILE "/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
 
 set_or_default LD_LIBRARY_PATH
+set_or_default ARKCASE_LIBRARY_DIR "${HOME_DIR}/.arkcase/libraries"
+export ARKCASE_LIBRARY_DIR
 
-# Apparently, Tomcat is still not happy in binary mode
-# LD_LIBRARY_PATH+=":${TOMCAT_HOME}/lib"
-LD_LIBRARY_PATH+=":${HOME_DIR}/.arkcase/libraries"
+LD_LIBRARY_PATH+=":${ARKCASE_LIBRARY_DIR}"
+export LD_LIBRARY_PATH
 
 set_or_default CATALINA_OPTS
 CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
