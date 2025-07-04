@@ -73,6 +73,9 @@ if is_file_readable "${SERVER_XML}" ; then
 	xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
 fi
 
+# This needs to exist to support the legacy deployments
+set_or_default COMPONENT "arkcase"
+
 #
 # Set the environment variables for the global artifacts checksum
 #
