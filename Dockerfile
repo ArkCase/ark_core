@@ -23,6 +23,9 @@ ARG JAVA="11"
 ARG TOMCAT_VER="9.0.106"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
+ARG TCNATIVE_VER="1.3.1"
+ARG TCNATIVE_URL="https://archive.apache.org/dist/tomcat/tomcat-connectors/native/${TCNATIVE_VER}/source/tomcat-native-${TCNATIVE_VER}-src.tar.gz"
+
 ARG CW_VER="1.5.0"
 ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
 ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
@@ -100,6 +103,7 @@ ARG RESOURCE_PATH="artifacts"
 ARG JAVA
 ARG TOMCAT_SRC
 ARG TOMCAT_VER
+ARG TCNATIVE_URL
 ARG WEBAPPS_DIR="${TOMCAT_HOME}/webapps"
 
 ENV LANG=en_US.UTF-8 \
@@ -143,20 +147,22 @@ RUN set-java "${JAVA}" && \
       && \
     yum -y clean all
 
-RUN curl -K --fail "${TOMCAT_SRC}" | tar -xzvf - && \
-    mv "apache-tomcat-${TOMCAT_VER}" "tomcat" && \
-    # Removal of default/unwanted Applications
+# Download and install Tomcat, and remove unwanted stuff
+RUN mkdir -p "${TOMCAT_HOME}" && \
+    curl -fsSL "${TOMCAT_SRC}" | tar --strip-components=1 -C "${TOMCAT_HOME}" -xzvf - && \
     rm -rf "${TOMCAT_HOME}/webapps"/* "${TOMCAT_HOME}/temp"/* "${TOMCAT_HOME}/bin"/*.bat
 
-# Compile the native connector
-RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
-    tar -C "${TOMCAT_HOME}/bin/native" -xzvf "${TOMCAT_HOME}/bin/tomcat-native.tar.gz" --strip-components=1 && \
-    pushd "${TOMCAT_HOME}/bin/native/native" && \
+# Build the Tomcat native APR connector
+RUN BUILD_DIR="/tmp/tcnative" && \
+    mkdir -p "${BUILD_DIR}" && \
+    pushd "${BUILD_DIR}" && \
+    curl -fsSL "${TCNATIVE_URL}" | tar --strip-components=1 -xzvf - && \
+    cd native && \
     ./configure --prefix="${TOMCAT_HOME}" && \
-    make && \
+    make && \ 
     make install && \
     popd && \
-    rm -rf "${TOMCAT_HOME}/bin/native"
+    rm -rf "${BUILD_DIR}"
 
 # Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
