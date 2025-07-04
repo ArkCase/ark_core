@@ -3,7 +3,7 @@
 set -euo pipefail
 . /.functions
 
-doing "Running ArkCase as: $(id)"
+doing "Running Tomcat as: $(id)"
 
 DEFAULT_CONFIG_WAIT=90
 DEFAULT_CONFIG_URL="https://localhost:9999"
@@ -80,11 +80,12 @@ SUM_FILE="${HOME_DIR}/.artifacts.global.sums"
 if is_file_readable "${SUM_FILE}" ; then
 	ARTIFACTS_GLOBAL_SUMS="$(<"${SUM_FILE}")"
 else
-	ARTIFACTS_GLOBAL_SUMS='{ "arkcase": "unknown" }'
+	ARTIFACTS_GLOBAL_SUMS="{ '${COMPONENT}': 'unknown' }"
+	ARTIFACTS_GLOBAL_SUMS="${ARTIFACTS_GLOBAL_SUMS//\"/\'}"
 fi
 
-# We're only interested in the ArkCase value, for now ...
-export ARTIFACTS_GLOBAL_HASH="$(jq -r ".arkcase" <<< "${ARTIFACTS_GLOBAL_SUMS}")"
+# We're only interested in the component's value, for now ...
+export ARTIFACTS_GLOBAL_HASH="$(jq --arg COMPONENT "${COMPONENT}" -r '.[$COMPONENT]' <<< "${ARTIFACTS_GLOBAL_SUMS}")"
 
 # Add some extra deetz to the JSON, for tracking purposes ;)
 ARTIFACTS_GLOBAL_SUMS="$(jq --arg POD_NAME "${POD_NAME}" --arg TIMESTAMP "$(timestamp)" -r '. += { "pod": $POD_NAME, "timestamp": $TIMESTAMP }' <<< "${ARTIFACTS_GLOBAL_SUMS}")"
@@ -97,10 +98,10 @@ set_or_default ENV_FILE "/.env"
 [ -s "${ENV_FILE}" ] && . "${ENV_FILE}"
 
 set_or_default LD_LIBRARY_PATH
-set_or_default ARKCASE_LIBRARY_DIR "${HOME_DIR}/.arkcase/libraries"
-export ARKCASE_LIBRARY_DIR
+set_or_default EXTRA_LIBRARY_DIR "${TEMP_DIR}/.libraries"
+export EXTRA_LIBRARY_DIR
 
-LD_LIBRARY_PATH+=":${ARKCASE_LIBRARY_DIR}"
+LD_LIBRARY_PATH+=":${EXTRA_LIBRARY_DIR}"
 export LD_LIBRARY_PATH
 
 set_or_default CATALINA_OPTS

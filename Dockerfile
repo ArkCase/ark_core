@@ -20,11 +20,12 @@ ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA="11"
-ARG TOMCAT_VER="9.0.105"
+ARG TOMCAT_VER="9.0.106"
 ARG TOMCAT_MAJOR_VER="9"
 ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
 ARG CW_VER="1.5.0"
-ARG CW_SRC="https://nexus.armedia.com/repository/arkcase/com/armedia/acm/curator-wrapper/${CW_VER}/curator-wrapper-${CW_VER}-exe.jar"
+ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
+ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
 
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
 ARG BASE_REPO="arkcase/base-java"
@@ -43,6 +44,7 @@ ARG VER
 ARG TOMCAT_VER
 ARG TOMCAT_MAJOR_VER
 ARG CW_SRC
+ARG CW_REPO
 ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
@@ -57,7 +59,7 @@ ARG RESOURCE_PATH="artifacts"
 
 LABEL ORG="ArkCase LLC" \
       MAINTAINER="Armedia Devops Team <devops@armedia.com>" \
-      APP="ArkCase Core" \
+      APP="ArkCase Tomcat" \
       VERSION="${VER}"
 
 #
@@ -89,7 +91,7 @@ RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
     chmod -R "ug=rwX,o=" "${BASE_DIR}"
 
-##################################################### ARKCASE: BELOW ###############################################################
+##################################################### RUNTIME: BELOW ###############################################################
 
 ARG VER
 ARG TOMCAT_VER
@@ -104,9 +106,6 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-#################
-# Build Arkcase
-#################
 ENV WEBAPPS_DIR="${WEBAPPS_DIR}" \
     NODE_ENV="production" \
     PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
@@ -117,7 +116,6 @@ COPY "${RESOURCE_PATH}/server.xml" \
      "${RESOURCE_PATH}/logging.properties" \
      "${RESOURCE_PATH}/catalina.properties" ./
 
-# Nodejs prerequisites to install native-addons from npm
 RUN set-java "${JAVA}" && \
     yum -y install \
         epel-release \
@@ -150,7 +148,7 @@ RUN curl -K --fail "${TOMCAT_SRC}" | tar -xzvf - && \
     # Removal of default/unwanted Applications
     rm -rf "${TOMCAT_HOME}/webapps"/* "${TOMCAT_HOME}/temp"/* "${TOMCAT_HOME}/bin"/*.bat
 
-    # Compile the native connector
+# Compile the native connector
 RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
     tar -C "${TOMCAT_HOME}/bin/native" -xzvf "${TOMCAT_HOME}/bin/tomcat-native.tar.gz" --strip-components=1 && \
     pushd "${TOMCAT_HOME}/bin/native/native" && \
@@ -160,7 +158,7 @@ RUN mkdir -p "${TOMCAT_HOME}/bin/native" && \
     popd && \
     rm -rf "${TOMCAT_HOME}/bin/native"
 
-    # Deploy the ArkCase stuff
+# Deploy the ArkCase stuff
 RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
     mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
@@ -168,7 +166,7 @@ RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOM
     chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
 # Disable this for now ... Tomcat is *still* not happy ...
-# ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
 ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
@@ -176,16 +174,16 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
     ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
     rm -rf /tmp/* 
 
-##################################################### ARKCASE: ABOVE ###############################################################
+##################################################### RUNTIME: ABOVE ###############################################################
 
 ADD --chown="${APP_USER}:${ACM_GROUP}" "entrypoint" "/entrypoint"
 
-COPY --chown=root:root become-developer run-developer arkcase check-ready /usr/local/bin/
+COPY --chown=root:root become-developer run-developer tomcat /usr/local/bin/
 COPY --chown=root:root 01-developer-mode /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/01-developer-mode && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
 
-RUN curl -L -o "/usr/local/bin/curator-wrapper.jar" "${CW_SRC}"
+RUN mvn-get "${CW_SRC}" "${CW_REPO}" "/usr/local/bin/curator-wrapper.jar"
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
