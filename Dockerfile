@@ -172,7 +172,7 @@ RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOM
     chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
 # Disable this for now ... Tomcat is *still* not happy ...
-ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
+# ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
 ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
     CATALINA_OUT="${LOGS_DIR}/catalina.out"
 
