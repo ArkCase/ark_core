@@ -84,7 +84,7 @@ if is_file_readable "${SUM_FILE}" ; then
 	ARTIFACTS_GLOBAL_SUMS="$(<"${SUM_FILE}")"
 else
 	ARTIFACTS_GLOBAL_SUMS="{ '${COMPONENT}': 'unknown' }"
-	ARTIFACTS_GLOBAL_SUMS="${ARTIFACTS_GLOBAL_SUMS//\"/\'}"
+	ARTIFACTS_GLOBAL_SUMS="${ARTIFACTS_GLOBAL_SUMS//\'/\"}"
 fi
 
 # We're only interested in the component's value, for now ...
