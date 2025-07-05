@@ -107,10 +107,6 @@ export EXTRA_LIBRARY_DIR
 LD_LIBRARY_PATH+=":${EXTRA_LIBRARY_DIR}"
 export LD_LIBRARY_PATH
 
-set_or_default CATALINA_OPTS
-CATALINA_OPTS+=" -Djava.library.path=$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
-export CATALINA_OPTS
-
 [ ${#} -gt 0 ] || set -- "run"
 CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
 
