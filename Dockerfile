@@ -20,19 +20,14 @@ ARG ARCH="amd64"
 ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA="11"
-ARG TOMCAT_VER="9.0.106"
-ARG TOMCAT_MAJOR_VER="9"
-ARG TOMCAT_SRC="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR_VER}/v${TOMCAT_VER}/bin/apache-tomcat-${TOMCAT_VER}.tar.gz"
-ARG TCNATIVE_VER="1.3.1"
-ARG TCNATIVE_URL="https://archive.apache.org/dist/tomcat/tomcat-connectors/native/${TCNATIVE_VER}/source/tomcat-native-${TCNATIVE_VER}-src.tar.gz"
 
 ARG CW_VER="1.5.0"
 ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
 ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
 
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
-ARG BASE_REPO="arkcase/base-java"
-ARG BASE_VER="8"
+ARG BASE_REPO="arkcase/base-tomcat"
+ARG BASE_VER="9.0.106"
 ARG BASE_VER_PFX=""
 ARG BASE_IMG="${BASE_REGISTRY}/${BASE_REPO}:${BASE_VER_PFX}${BASE_VER}"
 
@@ -44,8 +39,6 @@ FROM "${BASE_IMG}"
 ARG ARCH
 ARG OS
 ARG VER
-ARG TOMCAT_VER
-ARG TOMCAT_MAJOR_VER
 ARG CW_SRC
 ARG CW_REPO
 ARG APP_UID="1997"
@@ -57,8 +50,6 @@ ARG HOME_DIR="${BASE_DIR}/home"
 ARG TEMP_DIR="${HOME_DIR}/temp"
 ARG WORK_DIR="${HOME_DIR}/work"
 ARG LOGS_DIR="${BASE_DIR}/logs"
-ARG TOMCAT_HOME="${BASE_DIR}/tomcat"
-ARG RESOURCE_PATH="artifacts"
 
 LABEL ORG="ArkCase LLC" \
       MAINTAINER="Armedia Devops Team <devops@armedia.com>" \
@@ -79,10 +70,26 @@ ENV APP_UID="${APP_UID}" \
     HOME_DIR="${HOME_DIR}" \
     TEMP_DIR="${TEMP_DIR}" \
     WORK_DIR="${WORK_DIR}" \
-    LOGS_DIR="${LOGS_DIR}" \
-    TOMCAT_HOME="${TOMCAT_HOME}"
+    LOGS_DIR="${LOGS_DIR}"
 
 WORKDIR "${BASE_DIR}"
+
+##################################################### RUNTIME: BELOW ###############################################################
+
+#
+# Some Tomcat settings
+#
+ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
+    CATALINA_OUT="${LOGS_DIR}/catalina.out"
+
+#
+# Create some required directories
+#
+RUN mkdir -p \
+        "${TEMP_DIR}" \
+        "${WORK_DIR}" \
+        "${LOGS_DIR}" \
+        "${CATALINA_TMPDIR}"
 
 #
 # Create the requisite user and group
@@ -94,49 +101,33 @@ RUN rm -rf /tmp/* && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
     chmod -R "ug=rwX,o=" "${BASE_DIR}"
 
-##################################################### RUNTIME: BELOW ###############################################################
-
 ARG VER
-ARG TOMCAT_VER
-ARG TOMCAT_MAJOR_VER
-ARG RESOURCE_PATH="artifacts"
 ARG JAVA
-ARG TOMCAT_SRC
-ARG TOMCAT_VER
-ARG TCNATIVE_URL
-ARG WEBAPPS_DIR="${TOMCAT_HOME}/webapps"
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-ENV WEBAPPS_DIR="${WEBAPPS_DIR}" \
+ENV WEBAPPS_DIR="${TOMCAT_HOME}/webapps" \
     NODE_ENV="production" \
     PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
     TEMP="${TEMP_DIR}" \
     TMP="${TEMP_DIR}"
 
-COPY "${RESOURCE_PATH}/server.xml" \
-     "${RESOURCE_PATH}/logging.properties" \
-     "${RESOURCE_PATH}/catalina.properties" ./
-
+#
+# Install extra software
+#
 RUN set-java "${JAVA}" && \
     yum -y install \
         epel-release \
       && \
     yum -y install \
-        apr-devel \
-        gcc \
-        gcc-c++ \
         ImageMagick \
         ImageMagick-devel \
         fontconfig \
-        make \
         openldap-clients \
         openssl \
-        openssl-devel \
         qpdf \
-        redhat-rpm-config \
         sudo \
         tesseract \
         tesseract-osd \
@@ -147,38 +138,18 @@ RUN set-java "${JAVA}" && \
       && \
     yum -y clean all
 
-# Download and install Tomcat, and remove unwanted stuff
-RUN mkdir -p "${TOMCAT_HOME}" && \
-    curl -fsSL "${TOMCAT_SRC}" | tar --strip-components=1 -C "${TOMCAT_HOME}" -xzvf - && \
-    rm -rf "${TOMCAT_HOME}/webapps"/* "${TOMCAT_HOME}/temp"/* "${TOMCAT_HOME}/bin"/*.bat
+RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
+    ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
+    rm -rf /tmp/*
 
-# Build the Tomcat native APR connector
-RUN BUILD_DIR="/tmp/tcnative" && \
-    mkdir -p "${BUILD_DIR}" && \
-    pushd "${BUILD_DIR}" && \
-    curl -fsSL "${TCNATIVE_URL}" | tar --strip-components=1 -xzvf - && \
-    cd native && \
-    ./configure --prefix="${TOMCAT_HOME}" && \
-    make && \ 
-    make install && \
-    popd && \
-    rm -rf "${BUILD_DIR}"
-
+#
 # Deploy the ArkCase stuff
-RUN mv -vf "server.xml" "logging.properties" "catalina.properties" "${TOMCAT_HOME}/conf/" && \
-    mkdir -vp "${WEBAPPS_DIR}" && \
+#
+COPY "artifacts/" "${TOMCAT_HOME}/conf/"
+RUN mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
     chmod -R "ug=rwX,o=" "${TOMCAT_HOME}" && \
     chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
-
-# Disable this for now ... Tomcat is *still* not happy ...
-# ENV LD_LIBRARY_PATH="${TOMCAT_HOME}/lib:${LD_LIBRARY_PATH}"
-ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
-    CATALINA_OUT="${LOGS_DIR}/catalina.out"
-
-RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
-    ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
-    rm -rf /tmp/* 
 
 ##################################################### RUNTIME: ABOVE ###############################################################
 
@@ -193,14 +164,5 @@ RUN mvn-get "${CW_SRC}" "${CW_REPO}" "/usr/local/bin/curator-wrapper.jar"
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
-RUN mkdir -p \
-        "${TEMP_DIR}" \
-        "${WORK_DIR}" \
-        "${CATALINA_TMPDIR}"
-
-# These may have to disappear in openshift
-VOLUME [ "${HOME_DIR}" ]
-VOLUME [ "${LOGS_DIR}" ]
-VOLUME [ "${WEBAPPS_DIR}" ]
 
 ENTRYPOINT [ "/entrypoint" ]
