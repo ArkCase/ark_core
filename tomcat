@@ -110,6 +110,9 @@ export LD_LIBRARY_PATH
 [ ${#} -gt 0 ] || set -- "run"
 CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
 
+# Set the session cookie name
+set-session-cookie-name "${TOMCAT_HOME}/conf/context.xml"
+
 # In development mode, we take a slight detour b/c we'll want to run
 # the tomcat container in a loop so we can restart it over and over
 # without crashing the pod
