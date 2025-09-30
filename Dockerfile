@@ -21,7 +21,7 @@ ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA="11"
 
-ARG CW_VER="1.7.0"
+ARG CW_VER="1.7.1"
 ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
 ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
 
