@@ -21,13 +21,13 @@ ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA="11"
 
-ARG CW_VER="1.5.0"
+ARG CW_VER="1.7.0"
 ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
 ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
 
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
 ARG BASE_REPO="arkcase/base-tomcat"
-ARG BASE_VER="9.0.106"
+ARG BASE_VER="9.0.109"
 ARG BASE_VER_PFX=""
 ARG BASE_IMG="${BASE_REGISTRY}/${BASE_REPO}:${BASE_VER_PFX}${BASE_VER}"
 
