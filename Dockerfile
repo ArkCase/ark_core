@@ -21,10 +21,6 @@ ARG OS="linux"
 ARG VER="3.0.0"
 ARG JAVA="11"
 
-ARG CW_VER="1.7.1"
-ARG CW_SRC="com.armedia.acm:curator-wrapper:${CW_VER}:jar:exe"
-ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
-
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
 ARG BASE_REPO="arkcase/base-tomcat"
 ARG BASE_VER="latest"
@@ -39,8 +35,6 @@ FROM "${BASE_IMG}"
 ARG ARCH
 ARG OS
 ARG VER
-ARG CW_SRC
-ARG CW_REPO
 ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
@@ -119,8 +113,6 @@ COPY --chown="${APP_USER}:${ACM_GROUP}" --chmod=0755 "entrypoint" "/entrypoint"
 COPY --chown=root:root --chmod=0755 become-developer run-developer tomcat /usr/local/bin/
 COPY --chown=root:root --chmod=0444 01-developer-mode /etc/sudoers.d
 RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
-
-RUN mvn-get "${CW_SRC}" "${CW_REPO}" "/usr/local/bin/curator-wrapper.jar"
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
