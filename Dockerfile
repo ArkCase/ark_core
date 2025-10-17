@@ -94,7 +94,6 @@ RUN set-java "${JAVA}" && \
         imagemagick \
         libjmagick6-java \
         libjmagick6-jni \
-        ldap-utils \
         qpdf \
         tesseract-ocr \
       && \
