@@ -27,7 +27,7 @@ ARG CW_REPO="https://nexus.armedia.com/repository/arkcase"
 
 ARG BASE_REGISTRY="${PUBLIC_REGISTRY}"
 ARG BASE_REPO="arkcase/base-tomcat"
-ARG BASE_VER="9.0.109"
+ARG BASE_VER="latest"
 ARG BASE_VER_PFX=""
 ARG BASE_IMG="${BASE_REGISTRY}/${BASE_REPO}:${BASE_VER_PFX}${BASE_VER}"
 
@@ -45,15 +45,10 @@ ARG APP_UID="1997"
 ARG APP_USER="core"
 ARG APP_GID="${APP_UID}"
 ARG APP_GROUP="${APP_USER}"
-ARG BASE_DIR="/app"
-ARG HOME_DIR="${BASE_DIR}/home"
-ARG TEMP_DIR="${HOME_DIR}/temp"
-ARG WORK_DIR="${HOME_DIR}/work"
-ARG LOGS_DIR="${BASE_DIR}/logs"
 
 LABEL ORG="ArkCase LLC" \
       MAINTAINER="Armedia Devops Team <devops@armedia.com>" \
-      APP="ArkCase Tomcat" \
+      APP="ArkCase Core Application" \
       VERSION="${VER}"
 
 #
@@ -62,84 +57,52 @@ LABEL ORG="ArkCase LLC" \
 ENV APP_UID="${APP_UID}" \
     APP_USER="${APP_USER}" \
     APP_GID="${APP_GID}" \
-    APP_GROUP="${APP_GROUP}" \
-    LANG="en_US.UTF-8" \
-    LANGUAGE="en_US:en" \
-    LC_ALL="en_US.UTF-8" \
-    BASE_DIR="${BASE_DIR}" \ 
-    HOME_DIR="${HOME_DIR}" \
-    TEMP_DIR="${TEMP_DIR}" \
-    WORK_DIR="${WORK_DIR}" \
-    LOGS_DIR="${LOGS_DIR}"
+    APP_GROUP="${APP_GROUP}"
+
+ENV HOME_DIR="${BASE_DIR}/home"
+ENV WORK_DIR="${HOME_DIR}/work"
 
 WORKDIR "${BASE_DIR}"
 
 ##################################################### RUNTIME: BELOW ###############################################################
 
 #
-# Some Tomcat settings
-#
-ENV CATALINA_TMPDIR="${TEMP_DIR}/tomcat" \
-    CATALINA_OUT="${LOGS_DIR}/catalina.out"
-
-#
 # Create some required directories
 #
-RUN mkdir -p \
-        "${TEMP_DIR}" \
-        "${WORK_DIR}" \
-        "${LOGS_DIR}" \
-        "${CATALINA_TMPDIR}"
+RUN mkdir -p "${HOME_DIR}" "${WORK_DIR}"
 
 #
 # Create the requisite user and group
 #
 RUN groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
-    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}"
-
-RUN rm -rf /tmp/* && \
+    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
+    rm -rf /tmp/* && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "ug=rwX,o=" "${BASE_DIR}"
+    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}"
 
 ARG VER
 ARG JAVA
 
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
-
 ENV WEBAPPS_DIR="${TOMCAT_HOME}/webapps" \
-    NODE_ENV="production" \
-    PATH="${PATH}:${TOMCAT_HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin" \
-    TEMP="${TEMP_DIR}" \
-    TMP="${TEMP_DIR}"
+    NODE_ENV="production"
 
 #
 # Install extra software
 #
 RUN set-java "${JAVA}" && \
-    yum -y install \
-        epel-release \
-      && \
-    yum -y install \
-        ImageMagick \
-        ImageMagick-devel \
-        fontconfig \
-        openldap-clients \
-        openssl \
+    apt-get -y install \
+        imagemagick \
+        libjmagick6-java \
+        libjmagick6-jni \
+        ldap-utils \
         qpdf \
-        sudo \
-        tesseract \
-        tesseract-osd \
-        unzip \
-        wget \
-        xmlstarlet \
-        zip \
+        tesseract-ocr \
       && \
-    yum -y clean all
+    apt-get clean
 
-RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
-    ln -s "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
+RUN ln -sv "/usr/bin/convert" "/usr/bin/magick" && \
+    ln -sv "/usr/share/tesseract-ocr/4.00" "/usr/share/tesseract" && \
+    ln -sv "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
     rm -rf /tmp/*
 
 #
@@ -148,17 +111,15 @@ RUN ln -s "/usr/bin/convert" "/usr/bin/magick" && \
 COPY "artifacts/" "${TOMCAT_HOME}/conf/"
 RUN mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "ug=rwX,o=" "${TOMCAT_HOME}" && \
-    chmod "ug=rwx,o=" "${TOMCAT_HOME}/bin"/*.sh
+    chmod -R "u=rwX,g=rX,o=" "${TOMCAT_HOME}" && \
+    chmod "u=rwx,g=rx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
 ##################################################### RUNTIME: ABOVE ###############################################################
 
-ADD --chown="${APP_USER}:${ACM_GROUP}" "entrypoint" "/entrypoint"
-
-COPY --chown=root:root become-developer run-developer tomcat /usr/local/bin/
-COPY --chown=root:root 01-developer-mode /etc/sudoers.d
-RUN chmod 0640 /etc/sudoers.d/01-developer-mode && \
-    sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
+COPY --chown="${APP_USER}:${ACM_GROUP}" --chmod=0755 "entrypoint" "/entrypoint"
+COPY --chown=root:root --chmod=0755 become-developer run-developer tomcat /usr/local/bin/
+COPY --chown=root:root --chmod=0444 01-developer-mode /etc/sudoers.d
+RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
 
 RUN mvn-get "${CW_SRC}" "${CW_REPO}" "/usr/local/bin/curator-wrapper.jar"
 
