@@ -19,7 +19,7 @@ ARG PUBLIC_REGISTRY="public.ecr.aws"
 ARG ARCH="amd64"
 ARG OS="linux"
 # ARG VER="3.0.0"
-ARG JAVA="17"
+ARG VER="4.0.0"
 # ARG JAVA="11"
 ARG JAVA="17"
 
