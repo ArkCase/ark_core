@@ -93,6 +93,7 @@ RUN set-java "${JAVA}" && \
         libjmagick6-jni \
         qpdf \
         tesseract-ocr \
+        poppler-utils \
       && \
     apt-get clean
 
