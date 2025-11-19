@@ -91,9 +91,9 @@ RUN set-java "${JAVA}" && \
         imagemagick \
         libjmagick6-java \
         libjmagick6-jni \
+        poppler-utils \
         qpdf \
         tesseract-ocr \
-        poppler-utils \
       && \
     apt-get clean
 
