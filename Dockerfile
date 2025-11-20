@@ -127,6 +127,7 @@ RUN set-java "${JAVA}" && \
         fontconfig \
         openldap-clients \
         openssl \
+        poppler-utils \
         qpdf \
         sudo \
         tesseract \
