@@ -108,7 +108,7 @@ RUN ln -sv "/usr/bin/convert" "/usr/bin/magick" && \
 COPY "artifacts/" "${TOMCAT_HOME}/conf/"
 RUN mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "u=rwX,g=rX,o=" "${TOMCAT_HOME}" && \
+    chmod -R "ug=rwX,o=" "${TOMCAT_HOME}" && \
     chmod "u=rwx,g=rx,o=" "${TOMCAT_HOME}/bin"/*.sh
 
 ##################################################### RUNTIME: ABOVE ###############################################################
