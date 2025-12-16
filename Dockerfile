@@ -118,4 +118,6 @@ RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
 
+RUN mkdir -p "${HOME_DIR}/.postgresql" && ln -svf "/etc/ssl/certs/ca-certificates.crt" "${HOME_DIR}/.postgresql/root.crt"
+
 ENTRYPOINT [ "/entrypoint" ]
