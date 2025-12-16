@@ -113,7 +113,7 @@ RUN mkdir -vp "${WEBAPPS_DIR}" && \
 COPY --chown="${APP_USER}:${ACM_GROUP}" --chmod=0755 "entrypoint" "/entrypoint"
 COPY --chown=root:root --chmod=0755 become-developer run-developer tomcat /usr/local/bin/
 COPY --chown=root:root --chmod=0444 02-developer-mode /etc/sudoers.d
-RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
+RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/02-developer-mode
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
