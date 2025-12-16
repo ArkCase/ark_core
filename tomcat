@@ -35,8 +35,8 @@ init_ssl
 #
 PSQL_HOME="${HOME_DIR}/.postgresql"
 PSQL_ROOT_CA="${PSQL_HOME}/root.crt"
-mkdir -p "${PSQL_HOME}"
-ln -fsv "${CA_TRUSTS_PEM}" "${PSQL_ROOT_CA}" || fail "Failed to create the symlink from [${PSQL_ROOT_CA}] to [${CA_TRUSTS_PEM}]"
+mkdir -p "${PSQL_HOME}" || fail "Failed to create the PG Home directory at [${PSQL_HOME}] (rc=${?})"
+ln -fsv "${CA_TRUSTS_PEM}" "${PSQL_ROOT_CA}" || fail "Failed to create the symlink from [${PSQL_ROOT_CA}] to [${CA_TRUSTS_PEM}] (rc=${?})"
 
 # Enable reading the cert that HAProxy will need
 set_as_boolean CLUSTER_ENABLED "false"
