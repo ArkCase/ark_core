@@ -166,4 +166,6 @@ RUN mvn-get "${CW_SRC}" "${CW_REPO}" "/usr/local/bin/curator-wrapper.jar"
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
 
+RUN mkdir -p "${HOME_DIR}/.postgresql" && ln -svf "/etc/pki/tls/cert.pem" "${HOME_DIR}/.postgresql/root.crt"
+
 ENTRYPOINT [ "/entrypoint" ]
