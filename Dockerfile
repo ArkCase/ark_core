@@ -157,7 +157,7 @@ RUN mkdir -vp "${WEBAPPS_DIR}" && \
 ADD --chown="${APP_USER}:${ACM_GROUP}" "entrypoint" "/entrypoint"
 
 COPY --chown=root:root become-developer run-developer tomcat /usr/local/bin/
-COPY --chown=root:root 01-developer-mode /etc/sudoers.d
+COPY --chown=root:root 02-developer-mode /etc/sudoers.d
 RUN chmod 0640 /etc/sudoers.d/01-developer-mode && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/01-developer-mode
 
