@@ -72,7 +72,8 @@ RUN groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
     useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
     rm -rf /tmp/* && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}"
+    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" && \
+    chmod -R "ug=rwX,o=" "${TEMP_DIR}"
 
 ARG VER
 ARG JAVA
