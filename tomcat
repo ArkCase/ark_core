@@ -34,13 +34,10 @@ init_ssl
 # This is for PostgreSQL
 #
 PSQL_HOME="${HOME_DIR}/.postgresql"
-PSQL_ROOT_CA="${PSQL_HOME}/root.crt"
-mkdir -p "${PSQL_HOME}" || fail "Failed to create the PG Home directory at [${PSQL_HOME}] (rc=${?})"
-ln -fsv "${CA_TRUSTS_PEM}" "${PSQL_ROOT_CA}" || fail "Failed to create the symlink from [${PSQL_ROOT_CA}] to [${CA_TRUSTS_PEM}] (rc=${?})"
+is_dir_readable "${PSQL_HOME}" || mkdir -p "${PSQL_HOME}" || fail "Failed to create the PG Home directory at [${PSQL_HOME}] (rc=${?})"
 
-# Enable reading the cert that HAProxy will need
-set_as_boolean CLUSTER_ENABLED "false"
-"${CLUSTER_ENABLED}" && chmod a+r "${SSL_DIR}/haproxy-cert.pem"
+PSQL_ROOT_CA="${PSQL_HOME}/root.crt"
+is_file_readable "${PSQL_ROOT_CA}" || ln -fsv "${CA_TRUSTS_PEM}" "${PSQL_ROOT_CA}" || fail "Failed to create the symlink from [${PSQL_ROOT_CA}] to [${CA_TRUSTS_PEM}] (rc=${?})"
 
 if as_boolean "${POLL_CONFIG}" ; then
 	# We poke at a specific path that will always return a result
