@@ -110,7 +110,7 @@ set_or_default EXTRA_LIBRARY_DIR "${TEMP_DIR}/.libraries"
 export EXTRA_LIBRARY_DIR
 
 LD_LIBRARY_PATH+=":${EXTRA_LIBRARY_DIR}"
-export LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
 
 [ ${#} -gt 0 ] || set -- "run"
 CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
