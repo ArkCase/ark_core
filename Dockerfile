@@ -116,6 +116,8 @@ COPY --chown=root:root --chmod=0755 become-developer run-developer tomcat /usr/l
 COPY --chown=root:root --chmod=0444 02-developer-mode /etc/sudoers.d
 RUN sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/02-developer-mode
 
+COPY --chown=root:root --chmod=0444 imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
+
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
 
