@@ -89,7 +89,7 @@
                maxHttpHeaderSize="32768"
                maxThreads="150"
                port="8443"
-               protocol="org.apache.coyote.http11.Http11AprProtocol"
+               protocol="org.apache.coyote.http11.Http11NioProtocol"
                scheme="https"
                secure="true"
                SSLEnabled="true"
@@ -109,7 +109,7 @@
          configuration is used below.
     -->
     <!--
-    <Connector port="8443" protocol="org.apache.coyote.http11.Http11AprProtocol"
+    <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                maxThreads="150" SSLEnabled="true" >
         <UpgradeProtocol className="org.apache.coyote.http2.Http2Protocol" />
         <SSLHostConfig>
