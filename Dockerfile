@@ -95,9 +95,9 @@ RUN set-java "${JAVA}" && \
       && \
     apt-get clean
 
-RUN ln -sv "/usr/bin/convert" "/usr/bin/magick" && \
-    ln -sv "/usr/share/tesseract-ocr/4.00" "/usr/share/tesseract" && \
-    ln -sv "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
+RUN ln -v "/usr/bin/convert" "/usr/bin/magick" && \
+    ln -sv "tesseract-ocr/5" "/usr/share/tesseract" && \
+    ln -v "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
     rm -rf /tmp/*
 
 #
