@@ -72,8 +72,8 @@ RUN groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
     useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
     rm -rf /tmp/* && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" && \
-    chmod -R "ug=rwX,o=" "${TEMP_DIR}"
+    chown -R "${APP_USER}:${APP_GROUP}" "${HOME_DIR}" && \
+    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" "${TEMP_DIR}"
 
 ARG VER
 ARG JAVA
@@ -106,8 +106,9 @@ RUN ln -v "/usr/bin/convert" "/usr/bin/magick" && \
 COPY "artifacts/" "${TOMCAT_HOME}/conf/"
 RUN mkdir -vp "${WEBAPPS_DIR}" && \
     chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
-    chmod -R "ug=rwX,o=" "${TOMCAT_HOME}" && \
-    chmod "u=rwx,g=rx,o=" "${TOMCAT_HOME}/bin"/*.sh
+    chmod -R "u=rwX,g=rX,o=" "${TOMCAT_HOME}" && \
+    chmod "u=rwx,g=rx,o=" "${TOMCAT_HOME}/bin"/*.sh && \
+    chown root "${TOMCAT_HOME}/bin"
 
 ##################################################### RUNTIME: ABOVE ###############################################################
 
