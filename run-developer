@@ -118,6 +118,11 @@ if "${CHANGE_UID}" || [ ${CUR_UID} -eq 0 ] ; then
 		fi
 	done
 
+	# Fix the permissions in the home directory
+	say "Fixing the permissions for development mode..."
+	/usr/bin/chgrp -R "${ACM_GROUP}" "${BASE_DIR}" &>/dev/null || true
+	/usr/bin/chmod -R g+w "${BASE_DIR}" &>/dev/null || true
+
 	# We need to change our ID regardless ...
 	say "Development mode is active, will run as: $(/usr/bin/id "${DEV_USER}")"
 	CMD=(/usr/bin/sudo --non-interactive --preserve-env -u "${DEV_USER}" "PATH=${PATH}" "${CMD[@]}")
