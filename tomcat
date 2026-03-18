@@ -3,6 +3,11 @@
 set -euo pipefail
 . /.functions
 
+#
+# First things first, FIPS!!
+#
+set_fips
+
 doing "Running Tomcat as: $(id)"
 
 DEFAULT_CONFIG_WAIT=90
