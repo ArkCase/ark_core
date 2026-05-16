@@ -3,6 +3,17 @@
 set -euo pipefail
 . /.functions
 
+#
+# First, set the Java version since it may need to
+# be used during the SSL initialization steps
+#
+/usr/local/bin/set-java
+
+#
+# Init all the SSL-related stuff
+#
+init_ssl
+
 doing "Running Tomcat as: $(id)"
 
 DEFAULT_CONFIG_WAIT=90
@@ -24,11 +35,6 @@ set_or_default HOME_DIR "${BASE_DIR}/home"
 # This seems to be necessary in order for the AngularResourceCopier to not puke out
 cd "${HOME_DIR}" || fail "Failed to CD into the home directory [${HOME_DIR}]"
 export HOME="${HOME_DIR}"
-
-#
-# Update the SSL certificate trusts
-#
-init_ssl
 
 #
 # This is for PostgreSQL
@@ -67,17 +73,6 @@ fi
 # Remove al leading zeros, just in case...
 export NODE_ID="$(( 10#${NODE_ID} ))"
 
-#
-# Apply the changes to the server.xml template
-#
-SERVER_XML="${TOMCAT_HOME}/conf/server.xml.tpl"
-if is_file_readable "${SERVER_XML}" ; then
-	TARGET="${SERVER_XML//.tpl/}"
-	say "Editing [${TARGET}] to remove the redundant cluster member"
-	XPATH="//Cluster/Channel/Interceptor/Member[@className = 'org.apache.catalina.tribes.membership.StaticMember' and starts-with(@host, '$(hostname).')]"
-	xmlstarlet ed -P -d "${XPATH}" "${SERVER_XML}" > "${TARGET}"
-fi
-
 # This needs to exist to support the legacy deployments
 set_or_default COMPONENT "arkcase"
 
@@ -114,9 +109,6 @@ export LD_LIBRARY_PATH="$(sanitize_pathspec "${LD_LIBRARY_PATH}")"
 
 [ ${#} -gt 0 ] || set -- "run"
 CMD=("${TOMCAT_HOME}/bin/catalina.sh" "${@}")
-
-# Set the session cookie name
-set-session-cookie-name "${TOMCAT_HOME}/conf/context.xml"
 
 # In development mode, we take a slight detour b/c we'll want to run
 # the tomcat container in a loop so we can restart it over and over
