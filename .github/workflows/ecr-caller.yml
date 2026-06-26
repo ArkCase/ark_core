@@ -6,8 +6,6 @@ on:
         description: "The revision number to use for construction (computed from the Dockerfile if not provided)"
         required: false
         type: string
-      - develop
-      - develop-legacy
 
 jobs:
   call-workflow-in-ecr-template:
