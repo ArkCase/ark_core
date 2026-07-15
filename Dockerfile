@@ -83,6 +83,7 @@ ENV WEBAPPS_DIR="${TOMCAT_HOME}/webapps" \
 # Install extra software
 #
 RUN set-java "${JAVA}" && \
+    apt-get update && \
     apt-get -y install \
         imagemagick \
         libjmagick6-java \
