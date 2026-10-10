@@ -92,7 +92,8 @@ RUN set-java "${JAVA}" && \
         qpdf \
         tesseract-ocr \
       && \
-    apt-get clean
+    apt-get clean && \
+    chmod go-r /var/log/fontconfig*
 
 RUN ln -v "/usr/bin/convert" "/usr/bin/magick" && \
     ln -sv "tesseract-ocr/5" "/usr/share/tesseract" && \
