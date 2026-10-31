@@ -60,9 +60,10 @@ set-java
 ensure_dir "${WORK_DIR}"
 ensure_dir "${CATALINA_TMPDIR}"
 
+set_or_default POD_NAME "$(hostname)"
+POD_NAME="${POD_NAME%%.*}"
+
 if [ ! -v NODE_ID ] ; then
-	set_or_default POD_NAME "$(hostname)"
-	POD_NAME="${POD_NAME%%.*}"
 	[[ "${POD_NAME}" =~ ^.*-([0-9]+)$ ]] || fail "The pod name [${POD_NAME}] doesn't match the pattern for a stateful pod (must end with a number)"
 	NODE_ID="${BASH_REMATCH[1]}"
 else

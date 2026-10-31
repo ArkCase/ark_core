@@ -66,7 +66,7 @@ CMD=("${@}")
 CUR_UID="$(/usr/bin/id -u)" || fail "Failed to compute the current user's ID"
 
 
-set_or_default APP_USER_HOME "$(eval echo ~${APP_USER})"
+set_or_default APP_USER_HOME "$(/usr/bin/getent passwd "${APP_USER}" | /usr/bin/cut -d ':' -f 6)"
 export APP_USER_HOME
 
 # If we're in development mode, we need to check if we have to swap
