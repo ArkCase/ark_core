@@ -99,7 +99,7 @@ RUN --mount=type=bind,target=/src \
     chmod -R "ug=rwX,o=" "${TEMP_DIR}" "${TOMCAT_HOME}" && \
     chown root "${TOMCAT_HOME}/bin" && \
     chmod go-w "${TOMCAT_HOME}/bin" && \
-    install -o "${APP_USER}" -g "${ACM_GROUP}" -m 0755 /src/entrypoint / && \
+    install -o "${APP_USER}" -g "${ACM_GROUP}" -m 0755 /src/entrypoint /usr/local/bin && \
     install -o root -g root -m 0755 -t /usr/local/bin /src/become-developer /src/run-developer /src/tomcat && \
     install -o root -g root -m 0444 /src/02-developer-mode /etc/sudoers.d && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/02-developer-mode && \
@@ -111,4 +111,3 @@ RUN --mount=type=bind,target=/src \
 
 USER "${APP_USER}"
 WORKDIR "${HOME_DIR}"
-ENTRYPOINT [ "/entrypoint" ]
