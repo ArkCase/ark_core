@@ -71,7 +71,7 @@ ENV WEBAPPS_DIR="${TOMCAT_HOME}/webapps" \
 RUN --mount=type=bind,target=/src \
     mkdir -p "${HOME_DIR}" "${WORK_DIR}" && \
     groupadd --gid "${APP_GID}" "${APP_GROUP}" && \
-    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
+    useradd  --uid "${APP_UID}" --gid "${APP_GROUP}" --groups "${ACM_GROUP},${TOMCAT_GROUP}" --create-home --home-dir "${HOME_DIR}" "${APP_USER}" && \
     rm -rf /tmp/* && \
     set-java "${JAVA}" && \
     apt-get update && \
@@ -90,18 +90,18 @@ RUN --mount=type=bind,target=/src \
     ln -sv "tesseract-ocr/5" "/usr/share/tesseract" && \
     ln -v "/usr/share/tesseract/tessdata/configs/pdf" "/usr/share/tesseract/tessdata/configs/PDF" && \
     rm -rf /tmp/* && \
-    ( tar --owner=root --group=root --mode=u=rwX,go=rX -cf - /src/artifacts ) | tar --strip-components=2 -C "${TOMCAT_HOME}/conf" -xvf - && \
+    install-to-tomcat /src/artifacts/. conf && \
     mkdir -vp "${WEBAPPS_DIR}" && \
-    chown -R "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
+    chown "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
+    chmod "u=rwx,g=rx,o=" "${BASE_DIR}" && \
+    chown -R "${APP_USER}:${ACM_GROUP}" "${CONF_DIR}" "${DATA_DIR}" "${LOGS_DIR}" "${TEMP_DIR}" && \
+    chmod -R "u=rwX,g=rX,o=" "${CONF_DIR}" "${DATA_DIR}" "${LOGS_DIR}" && \
+    chmod -R "ug=rwX,o=" "${TEMP_DIR}" && \
     chown -R "${APP_USER}:${APP_GROUP}" "${HOME_DIR}" && \
-    chmod -R "u=rwX,g=rX,o=" "${BASE_DIR}" && \
-    chmod "u=rwx,g=rx,o=" "${TOMCAT_HOME}/bin"/*.sh && \
-    chmod -R "ug=rwX,o=" "${TEMP_DIR}" "${TOMCAT_HOME}" && \
-    chown root "${TOMCAT_HOME}/bin" && \
-    chmod go-w "${TOMCAT_HOME}/bin" && \
+    chmod -R "u=rwX,g=rX,o=" "${HOME_DIR}" && \
     install -o "${APP_USER}" -g "${ACM_GROUP}" -m 0755 /src/entrypoint /usr/local/bin && \
     install -o root -g root -m 0755 -t /usr/local/bin /src/become-developer /src/run-developer /src/tomcat && \
-    install -o root -g root -m 0444 /src/02-developer-mode /etc/sudoers.d && \
+    install -o root -g root -m 0440 /src/02-developer-mode /etc/sudoers.d && \
     sed -i -e "s;\${ACM_GROUP};${ACM_GROUP};g" /etc/sudoers.d/02-developer-mode && \
     install -o root -g root -m 0444 /src/imagemagick-policy.xml /etc/ImageMagick-6/policy.xml && \
     mkdir -p "${HOME_DIR}/.postgresql" && \
