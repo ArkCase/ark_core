@@ -94,9 +94,10 @@ RUN --mount=type=bind,target=/src \
     mkdir -vp "${WEBAPPS_DIR}" && \
     chown "${APP_USER}:${ACM_GROUP}" "${BASE_DIR}" && \
     chmod "u=rwx,g=rx,o=" "${BASE_DIR}" && \
-    chown -R "${APP_USER}:${ACM_GROUP}" "${CONF_DIR}" "${DATA_DIR}" "${LOGS_DIR}" "${TEMP_DIR}" && \
+    chown -R "${APP_USER}:${ACM_GROUP}" "${CONF_DIR}" "${DATA_DIR}" "${LOGS_DIR}" && \
     chmod -R "u=rwX,g=rX,o=" "${CONF_DIR}" "${DATA_DIR}" "${LOGS_DIR}" && \
-    chmod -R "ug=rwX,o=" "${TEMP_DIR}" && \
+    chown -R "${APP_USER}:${APP_GROUP}" "${TEMP_DIR}" && \
+    chmod -R u=rwX,g=rX,o= "${TEMP_DIR}" && \
     chown -R "${APP_USER}:${APP_GROUP}" "${HOME_DIR}" && \
     chmod -R "u=rwX,g=rX,o=" "${HOME_DIR}" && \
     install -o "${APP_USER}" -g "${ACM_GROUP}" -m 0755 /src/entrypoint /usr/local/bin && \
