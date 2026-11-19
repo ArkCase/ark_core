@@ -157,6 +157,15 @@
       <Host name="localhost"  appBase="webapps"
             xmlBase="${java.io.tmpdir}/conf/Catalina/localhost"
             unpackWARs="true" autoDeploy="true" workDir="${WORK_DIR}">
+        <!-- In case we need to remove headers -->
+        <!-- Tomcat 9 -->
+        <!--
+        <Valve className="com.armedia.web.tomcat.JavaxRemoveRequestHeaderValve" headers="X-Foo, X-Bar"/>
+        -->
+        <!-- Tomcat 10.1, 11 -->
+        <!--
+        <Valve className="com.armedia.web.tomcat.JakartaRemoveRequestHeaderValve" headers="X-Foo, X-Bar"/>
+        -->
 
         <!-- SingleSignOn valve, share authentication between web applications
              Documentation at: /docs/config/valve.html -->
